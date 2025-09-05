@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Finanzas Personales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .tab-button.active {
+            color: #4f46e5;
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        th, td {
+            white-space: nowrap;
+        }
+        .loading-text {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <div id="authScreen" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Iniciar Sesión</h1>
+            <button id="signInBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                Iniciar sesión con Google
+            </button>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden flex flex-col flex-grow">
+        <header class="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
+            <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9" />
+                </svg>
+                <span class="text-xl font-bold text-gray-800">Finanzas Personales</span>
+            </div>
+            <div class="flex items-center">
+                <span id="userGreeting" class="text-gray-600 text-sm hidden md:block mr-4"></span>
+                <button id="signOutBtn" class="text-gray-500 hover:text-red-500 transition duration-300 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V4m-2 4h4a2 2 0 012 2v2m-2-4h-4a2 2 0 00-2 2v2" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-4 md:p-6 pb-20 overflow-y-auto">
+            <div id="dashboard" class="tab-content grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Cuentas</h2>
+                    <div id="accountsSummary" class="space-y-4">
+                        <p class="text-sm text-gray-500 loading-text">Cargando resumen de cuentas...</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Ingresos vs Gastos</h2>
+                    <canvas id="incomeExpenseChart"></canvas>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gastos por Categoría</h2>
+                    <canvas id="expenseCategoryChart"></canvas>
+                </div>
+
+                <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Flujo de Caja Anual</h2>
+                    <canvas id="cashFlowChart"></canvas>
+                </div>
+            </div>
+
+            <div id="transactions" class="tab-content hidden">
+                <div id="transactionMain" class="bg-white p-6 rounded-lg shadow-sm mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Transacciones</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button id="registerTransactionBtn" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                            Registrar Transacción
+                        </button>
+                        <button id="viewHistoryBtn" class="bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-700 transition duration-300">
+                            Historial de Transacciones
+                        </button>
+                    </div>
+                </div>
+
+                <div id="transactionMenu" class="bg-white p-6 rounded-lg shadow-sm mb-6 hidden">
+                    <button id="backFromTransactionBtn" class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg mb-4 hover:bg-gray-400 transition duration-300">
+                        &larr; Volver
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Seleccione Tipo de Transacción</h2>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <button id="addIncomeBtn" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
+                            Declarar Ingreso
+                        </button>
+                        <button id="addExpenseBtn" class="bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-red-700 transition duration-300">
+                            Declarar Gasto
+                        </button>
+                        <button id="addTransferBtn" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                            Transferencia entre cuentas
+                        </button>
+                        <button id="addRecurringBtn" class="bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-yellow-700 transition duration-300">
+                            Transacción recurrente
+                        </button>
+                    </div>
+                </div>
+
+                <div id="transactionContent" class="hidden mt-6">
+                    <button id="backFromFormBtn" class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg mb-4 hover:bg-gray-400 transition duration-300">
+                        &larr; Volver
+                    </button>
+
+                    <div id="incomeExpenseForm" class="bg-white p-6 rounded-lg shadow-sm hidden">
+                        <h3 id="formTitle" class="text-lg font-semibold text-gray-800 mb-4"></h3>
+                        <form id="transactionForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <input type="hidden" id="type" name="type" value="">
+                            <input type="hidden" id="transactionId" name="transactionId" value="">
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                                <input type="text" id="description" name="description" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="amount" class="block text-sm font-medium text-gray-700">Cantidad (€)</label>
+                                <input type="number" id="amount" name="amount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-700">Categoría</label>
+                                <select id="category" name="category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                    </select>
+                            </div>
+                            <div>
+                                <label for="date" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="account" class="block text-sm font-medium text-gray-700">Cuenta</label>
+                                <select id="account" name="account" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                    </select>
+                            </div>
+                            <div>
+                                <label for="accountingBook" class="block text-sm font-medium text-gray-700">Contabilidad</label>
+                                <select id="accountingBook" name="accountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                    </select>
+                            </div>
+                            <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
+                                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                    Registrar Transacción
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="transferForm" class="bg-white p-6 rounded-lg shadow-sm hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Registrar Transferencia</h3>
+                        <form id="transferFormElem" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="transferFrom" class="block text-sm font-medium text-gray-700">Cuenta de Origen</label>
+                                <select id="transferFrom" name="transferFrom" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="transferTo" class="block text-sm font-medium text-gray-700">Cuenta de Destino</label>
+                                <select id="transferTo" name="transferTo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="transferAmount" class="block text-sm font-medium text-gray-700">Cantidad (€)</label>
+                                <input type="number" id="transferAmount" name="transferAmount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="transferDate" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="transferDate" name="transferDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="transferAccountingBook" class="block text-sm font-medium text-gray-700">Contabilidad</label>
+                                <select id="transferAccountingBook" name="transferAccountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                    Registrar Transferencia
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="recurringForm" class="bg-white p-6 rounded-lg shadow-sm hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Registrar Transacción Recurrente</h3>
+                        <form id="recurringFormElem" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="recType" class="block text-sm font-medium text-gray-700">Tipo</label>
+                                <select id="recType" name="recType" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="income">Ingreso</option>
+                                    <option value="expense">Gasto</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="recDescription" class="block text-sm font-medium text-gray-700">Descripción</label>
+                                <input type="text" id="recDescription" name="recDescription" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="recAmount" class="block text-sm font-medium text-gray-700">Cantidad (€)</label>
+                                <input type="number" id="recAmount" name="recAmount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="recCategory" class="block text-sm font-medium text-gray-700">Categoría</label>
+                                <select id="recCategory" name="recCategory" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="recAccount" class="block text-sm font-medium text-gray-700">Cuenta</label>
+                                <select id="recAccount" name="recAccount" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="recAccountingBook" class="block text-sm font-medium text-gray-700">Contabilidad</label>
+                                <select id="recAccountingBook" name="recAccountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="recFrequency" class="block text-sm font-medium text-gray-700">Frecuencia</label>
+                                <select id="recFrequency" name="recFrequency" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <option value="monthly">Mensual</option>
+                                    <option value="weekly">Semanal</option>
+                                    <option value="yearly">Anual</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="recStartDate" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                                <input type="date" id="recStartDate" name="recStartDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                    Guardar Recurrente
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="transactionHistory" class="bg-white p-6 rounded-lg shadow-sm mt-6 hidden">
+                    <button id="backFromHistoryBtn" class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg mb-4 hover:bg-gray-400 transition duration-300">
+                        &larr; Volver
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Historial de Transacciones</h2>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contabilidad</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 loading-text">Cargando transacciones...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="budgets" class="tab-content hidden">
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestionar Presupuestos</h2>
+                    <form id="budgetForm" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="budgetName" class="block text-sm font-medium text-gray-700">Nombre</label>
+                            <input type="text" id="budgetName" name="budgetName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        </div>
+                        <div>
+                            <label for="budgetAmount" class="block text-sm font-medium text-gray-700">Cantidad (€)</label>
+                            <input type="number" id="budgetAmount" name="budgetAmount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                        </div>
+                        <div>
+                            <label for="budgetCategory" class="block text-sm font-medium text-gray-700">Categoría</label>
+                            <select id="budgetCategory" name="budgetCategory" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1 md:col-span-3 lg:col-span-1 mt-2">
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                Guardar Presupuesto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Presupuestos Actuales</h2>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gastado</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restante</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="budgetsTableBody" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 loading-text">Cargando presupuestos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="broker" class="tab-content hidden">
+                <div id="brokerMenu" class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestión de Inversiones</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button id="brokerBuyBtn" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
+                            Comprar Activos
+                        </button>
+                        <button id="brokerSellBtn" class="bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-red-700 transition duration-300">
+                            Vender Activos
+                        </button>
+                        <button id="brokerConsultBtn" class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                            Consultar Cartera
+                        </button>
+                    </div>
+                </div>
+
+                <div id="brokerContent" class="hidden mt-6">
+                    <button id="backFromBrokerBtn" class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg mb-4 hover:bg-gray-400 transition duration-300">
+                        &larr; Volver
+                    </button>
+
+                    <div id="buyForm" class="bg-white p-6 rounded-lg shadow-sm hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Comprar Activos</h3>
+                        <form id="brokerBuyForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="buyAssetSymbol" class="block text-sm font-medium text-gray-700">Símbolo</label>
+                                <input type="text" id="buyAssetSymbol" name="buyAssetSymbol" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="buyAssetPrice" class="block text-sm font-medium text-gray-700">Precio de compra (€)</label>
+                                <input type="number" id="buyAssetPrice" name="buyAssetPrice" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="buyAssetQuantity" class="block text-sm font-medium text-gray-700">Cantidad</label>
+                                <input type="number" id="buyAssetQuantity" name="buyAssetQuantity" required step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
+                                <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
+                                    Registrar Compra
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="sellForm" class="bg-white p-6 rounded-lg shadow-sm hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Vender Activos</h3>
+                        <form id="brokerSellForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="sellAssetSymbol" class="block text-sm font-medium text-gray-700">Símbolo</label>
+                                <input type="text" id="sellAssetSymbol" name="sellAssetSymbol" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="sellAssetPrice" class="block text-sm font-medium text-gray-700">Precio de venta (€)</label>
+                                <input type="number" id="sellAssetPrice" name="sellAssetPrice" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div>
+                                <label for="sellAssetQuantity" class="block text-sm font-medium text-gray-700">Cantidad</label>
+                                <input type="number" id="sellAssetQuantity" name="sellAssetQuantity" required step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            </div>
+                            <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
+                                <button type="submit" class="w-full bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition duration-300">
+                                    Registrar Venta
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="consultContent" class="bg-white p-6 rounded-lg shadow-sm hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Tu Cartera</h3>
+                        <div class="table-container">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Símbolo</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Medio</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Precio</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ganancia/Pérdida</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="portfolioTableBody" class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 loading-text">Cargando cartera...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile" class="tab-content hidden">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Mi Perfil</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <img id="userPhoto" class="h-16 w-16 rounded-full mr-4" src="" alt="Foto de perfil">
+                            <div>
+                                <p id="displayName" class="font-semibold text-gray-800"></p>
+                                <p id="emailAddress" class="text-gray-600 text-sm"></p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm">Último inicio de sesión: <span id="lastSignInTime" class="font-medium"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings" class="tab-content hidden">
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestionar Atributos</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Categorías</h3>
+                            <form id="categoryForm" class="flex flex-col sm:flex-row gap-2 mb-4">
+                                <input type="text" id="newCategory" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Nueva Categoría">
+                                <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                    Añadir
+                                </button>
+                            </form>
+                            <div class="flex flex-wrap gap-2" id="categoryList">
+                                </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Cuentas</h3>
+                            <form id="accountForm" class="flex flex-col sm:flex-row gap-2 mb-4">
+                                <input type="text" id="newAccount" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Nombre de la Cuenta">
+                                <input type="number" id="initialBalance" step="0.01" value="0" class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Saldo Inicial">
+                                <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                    Añadir
+                                </button>
+                            </form>
+                            <div class="flex flex-wrap gap-2" id="accountList">
+                                </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 mb-2">Contabilidades</h3>
+                            <form id="accountingForm" class="flex flex-col sm:flex-row gap-2 mb-4">
+                                <input type="text" id="newAccountingBook" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Nueva Contabilidad">
+                                <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                    Añadir
+                                </button>
+                            </form>
+                            <div class="flex flex-wrap gap-2" id="accountingList">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden">
+            <div class="flex justify-around items-center h-16">
+                <button id="dashboardBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600 active" data-tab="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="text-xs mt-1">Inicio</span>
+                </button>
+                <button id="transactionsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="transactions">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/>
+                    </svg>
+                    <span class="text-xs mt-1">Transacciones</span>
+                </button>
+                <button id="budgetsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="budgets">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="text-xs mt-1">Presupuestos</span>
+                </button>
+                <button id="brokerBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="broker">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13a1 1 0 01-1 1H9z"/>
+                    </svg>
+                    <span class="text-xs mt-1">Bróker</span>
+                </button>
+                <button id="profileBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-xs mt-1">Perfil</span>
+                </button>
+                <button id="settingsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="text-xs mt-1">Configuración</span>
+                </button>
+            </div>
+        </nav>
+
+        <nav class="hidden md:flex justify-center bg-white shadow-sm py-2 px-6">
+            <div class="flex space-x-4">
+                <button id="dashboardBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600 active" data-tab="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Inicio</span>
+                </button>
+                <button id="transactionsBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="transactions">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/>
+                    </svg>
+                    <span>Transacciones</span>
+                </button>
+                <button id="budgetsBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="budgets">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Presupuestos</span>
+                </button>
+                <button id="brokerBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="broker">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13a1 1 0 01-1 1H9z"/>
+                    </svg>
+                    <span>Bróker</span>
+                </button>
+                <button id="profileBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span>Perfil</span>
+                </button>
+                <button id="settingsBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Configuración</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, query, where, onSnapshot, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+ apiKey: "AIzaSyA2k5hvtCzAxClwmgxuiyiIzSa4UugZLas",
+  authDomain: "finance-control-35102.firebaseapp.com",
+  projectId: "finance-control-35102",
+  storageBucket: "finance-control-35102.firebasestorage.app",
+  messagingSenderId: "863606044392",
+  appId: "1:863606044392:web:9da74f5606f988b53b3b5d",
+  measurementId: "G-582WDX4234"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const signInBtn = document.getElementById('signInBtn');
+        const signOutBtn = document.getElementById('signOutBtn');
+        const authScreen = document.getElementById('authScreen');
+        const mainApp = document.getElementById('mainApp');
+        const userGreeting = document.getElementById('userGreeting');
+        const userPhoto = document.getElementById('userPhoto');
+        const displayName = document.getElementById('displayName');
+        const emailAddress = document.getElementById('emailAddress');
+        const lastSignInTime = document.getElementById('lastSignInTime');
+        const submitBtn = document.getElementById('submitBtn');
+        const transactionIdField = document.getElementById('transactionId');
+
+        let userId = null;
+        let unsubscribeTransactions;
+        let unsubscribeBudgets;
+        let unsubscribeAssets;
+        let unsubscribeSettings;
+
+        const showAuthScreen = () => {
+            authScreen.classList.remove('hidden');
+            mainApp.classList.add('hidden');
+        };
+
+        const showMainApp = (user) => {
+            authScreen.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            userGreeting.textContent = `Hola, ${user.displayName.split(' ')[0]}`;
+            userPhoto.src = user.photoURL || 'https://via.placeholder.com/150';
+            displayName.textContent = user.displayName;
+            emailAddress.textContent = user.email;
+            lastSignInTime.textContent = new Date(user.metadata.lastSignInTime).toLocaleString();
+        };
+
+        signInBtn.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Error signing in with Google:", error);
+            }
+        });
+
+        signOutBtn.addEventListener('click', async () => {
+            await signOut(auth);
+            showAuthScreen();
+        });
+
+        const getTabs = () => document.querySelectorAll('.tab-content');
+        const getTabButtons = () => document.querySelectorAll('.tab-button');
+        const showTab = (tabId) => {
+            getTabs().forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            getTabButtons().forEach(button => button.classList.remove('active'));
+            document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+        };
+
+        getTabButtons().forEach(button => {
+            button.addEventListener('click', (e) => {
+                showTab(e.currentTarget.dataset.tab);
+            });
+        });
+
+        // Funciones de manejo de datos
+        const dbCollections = {
+            transactions: "transactions",
+            budgets: "budgets",
+            assets: "assets",
+            userSettings: "userSettings",
+            recurringTransactions: "recurringTransactions"
+        };
+
+        const hideAllTransactionForms = () => {
+            document.getElementById('incomeExpenseForm').classList.add('hidden');
+            document.getElementById('transferForm').classList.add('hidden');
+            document.getElementById('recurringForm').classList.add('hidden');
+        };
+        
+        const resetTransactionForm = () => {
+            document.getElementById('transactionForm').reset();
+            document.getElementById('date').valueAsDate = new Date();
+            transactionIdField.value = '';
+            submitBtn.textContent = 'Registrar Transacción';
+        };
+
+        const saveTransaction = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                type: form.type.value,
+                description: form.description.value,
+                amount: parseFloat(form.amount.value),
+                category: form.category.value,
+                date: new Date(form.date.value),
+                account: form.account.value,
+                accountingBook: form.accountingBook.value,
+                userId: userId,
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                const transactionId = transactionIdField.value;
+                if (transactionId) {
+                    await updateDoc(doc(db, dbCollections.transactions, transactionId), data);
+                    alert("Transacción actualizada con éxito!");
+                    document.getElementById('transactionContent').classList.add('hidden');
+                    document.getElementById('transactionHistory').classList.remove('hidden');
+                } else {
+                    await addDoc(collection(db, dbCollections.transactions), data);
+                    alert("Transacción registrada con éxito!");
+                }
+                resetTransactionForm();
+            } catch (e) {
+                console.error("Error saving document: ", e);
+            }
+        };
+
+        const saveTransfer = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const transferAmount = parseFloat(form.transferAmount.value);
+            const transferDate = new Date(form.transferDate.value);
+            const fromAccount = form.transferFrom.value;
+            const toAccount = form.transferTo.value;
+            const accountingBook = form.transferAccountingBook.value;
+
+            if (fromAccount === toAccount) {
+                alert("Las cuentas de origen y destino no pueden ser las mismas.");
+                return;
+            }
+
+            const transferData = {
+                description: `Transferencia de ${fromAccount} a ${toAccount}`,
+                amount: transferAmount,
+                date: transferDate,
+                accountingBook: accountingBook,
+                userId: userId,
+                createdAt: serverTimestamp()
+            };
+
+            const expenseData = { ...transferData, type: 'expense', account: fromAccount, category: 'Transferencia' };
+            const incomeData = { ...transferData, type: 'income', account: toAccount, category: 'Transferencia' };
+
+            try {
+                await addDoc(collection(db, dbCollections.transactions), expenseData);
+                await addDoc(collection(db, dbCollections.transactions), incomeData);
+                form.reset();
+                document.getElementById('transferDate').valueAsDate = new Date();
+                alert("Transferencia registrada con éxito!");
+            } catch (e) {
+                console.error("Error adding transfer documents: ", e);
+            }
+        };
+
+        const saveRecurringTransaction = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                type: form.recType.value,
+                description: form.recDescription.value,
+                amount: parseFloat(form.recAmount.value),
+                category: form.recCategory.value,
+                account: form.recAccount.value,
+                accountingBook: form.recAccountingBook.value,
+                frequency: form.recFrequency.value,
+                startDate: new Date(form.recStartDate.value),
+                userId: userId,
+                createdAt: serverTimestamp()
+            };
+            try {
+                await addDoc(collection(db, dbCollections.recurringTransactions), data);
+                form.reset();
+                document.getElementById('recStartDate').valueAsDate = new Date();
+                alert("Transacción recurrente guardada con éxito. Se ejecutará automáticamente según la frecuencia elegida.");
+            } catch (e) {
+                console.error("Error adding recurring document: ", e);
+            }
+        };
+
+        const saveBudget = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                name: form.budgetName.value,
+                amount: parseFloat(form.budgetAmount.value),
+                category: form.budgetCategory.value,
+                userId: userId,
+                createdAt: serverTimestamp()
+            };
+            try {
+                await addDoc(collection(db, dbCollections.budgets), data);
+                form.reset();
+                alert("Presupuesto guardado con éxito!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        };
+
+        const saveAssetBuy = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                type: "buy",
+                symbol: form.buyAssetSymbol.value.toUpperCase(),
+                price: parseFloat(form.buyAssetPrice.value),
+                quantity: parseInt(form.buyAssetQuantity.value),
+                userId: userId,
+                createdAt: serverTimestamp()
+            };
+            try {
+                await addDoc(collection(db, dbCollections.assets), data);
+                form.reset();
+                alert("Compra de activo registrada con éxito!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        };
+
+        const saveAssetSell = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                type: "sell",
+                symbol: form.sellAssetSymbol.value.toUpperCase(),
+                price: parseFloat(form.sellAssetPrice.value),
+                quantity: parseInt(form.sellAssetQuantity.value),
+                userId: userId,
+                createdAt: serverTimestamp()
+            };
+            try {
+                await addDoc(collection(db, dbCollections.assets), data);
+                form.reset();
+                alert("Venta de activo registrada con éxito!");
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        };
+
+        const addSetting = async (settingType, value, initialBalance = null) => {
+            const settingsRef = doc(db, dbCollections.userSettings, userId);
+            const settingsDoc = await getDoc(settingsRef);
+            let settingsData = {};
+            if (settingsDoc.exists()) {
+                settingsData = settingsDoc.data();
+            } else {
+                settingsData = { categories: [], accounts: [], accountingBooks: [] };
+            }
+
+            if (!settingsData[settingType]) {
+                settingsData[settingType] = [];
+            }
+            if (!settingsData[settingType].includes(value)) {
+                settingsData[settingType].push(value);
+                try {
+                    await setDoc(settingsRef, { [settingType]: settingsData[settingType] }, { merge: true });
+                    alert(`El elemento "${value}" ha sido añadido.`);
+                    
+                    if (settingType === 'accounts' && initialBalance !== null && parseFloat(initialBalance) > 0) {
+                        const transactionData = {
+                            type: 'income',
+                            description: 'Saldo inicial',
+                            amount: parseFloat(initialBalance),
+                            category: 'Saldo Inicial',
+                            date: new Date(),
+                            account: value,
+                            accountingBook: 'Principal', 
+                            userId: userId,
+                            createdAt: serverTimestamp()
+                        };
+                        await addDoc(collection(db, dbCollections.transactions), transactionData);
+                        alert("Saldo inicial registrado como transacción.");
+                    }
+                } catch (e) {
+                    console.error("Error updating settings: ", e);
+                }
+            } else {
+                alert(`El valor "${value}" ya existe.`);
+            }
+        };
+        
+        const deleteSetting = async (settingType, value) => {
+            if (confirm(`¿Estás seguro de que quieres eliminar "${value}" de ${settingType}?`)) {
+                const settingsRef = doc(db, dbCollections.userSettings, userId);
+                const settingsDoc = await getDoc(settingsRef);
+                const settingsData = settingsDoc.data();
+                const newArray = settingsData[settingType].filter(item => item !== value);
+                try {
+                    await updateDoc(settingsRef, { [settingType]: newArray });
+                    alert("Elemento eliminado.");
+                } catch (e) {
+                    console.error("Error deleting setting: ", e);
+                }
+            }
+        };
+
+        const deleteDocument = async (collectionName, docId) => {
+            if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
+                try {
+                    await deleteDoc(doc(db, collectionName, docId));
+                    alert("Registro eliminado.");
+                } catch (e) {
+                    console.error("Error deleting document: ", e);
+                }
+            }
+        };
+
+        const editTransaction = (docId) => {
+            const transaction = transactionsData.find(t => t.id === docId);
+            if (!transaction) return;
+
+            document.getElementById('transactionMain').classList.add('hidden');
+            document.getElementById('transactionHistory').classList.add('hidden');
+            document.getElementById('transactionMenu').classList.add('hidden');
+            document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms();
+            document.getElementById('incomeExpenseForm').classList.remove('hidden');
+            
+            document.getElementById('formTitle').textContent = 'Editar Transacción';
+            submitBtn.textContent = 'Guardar Cambios';
+            transactionIdField.value = docId;
+
+            document.getElementById('type').value = transaction.type;
+            document.getElementById('description').value = transaction.description;
+            document.getElementById('amount').value = transaction.amount;
+            document.getElementById('category').value = transaction.category;
+            document.getElementById('date').value = new Date(transaction.date.seconds * 1000).toISOString().split('T')[0];
+            document.getElementById('account').value = transaction.account;
+            document.getElementById('accountingBook').value = transaction.accountingBook;
+        };
+
+        let transactionsData = [];
+
+        const renderTransactions = (transactions) => {
+            transactionsData = transactions.map(d => ({id: d.id, ...d.data()}));
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = '';
+            if (transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay transacciones registradas.</td></tr>';
+                return;
+            }
+            transactionsData.forEach(data => {
+                const row = document.createElement('tr');
+                row.className = data.type === 'expense' ? 'bg-red-50' : 'bg-green-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.date ? new Date(data.date.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.type === 'income' ? 'Ingreso' : 'Gasto'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${data.amount.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.account}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.accountingBook || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="edit-btn text-indigo-600 hover:text-indigo-900 transition duration-300 mr-2" data-id="${data.id}">
+                            Editar
+                        </button>
+                        <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300" data-id="${data.id}" data-collection="${dbCollections.transactions}">
+                            Eliminar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    deleteDocument(e.target.dataset.collection, e.target.dataset.id);
+                });
+            });
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    editTransaction(e.target.dataset.id);
+                });
+            });
+        };
+
+        const renderBudgets = (budgets, transactions) => {
+            const tbody = document.getElementById('budgetsTableBody');
+            tbody.innerHTML = '';
+            if (budgets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay presupuestos registrados.</td></tr>';
+                return;
+            }
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+
+            budgets.forEach(budgetDoc => {
+                const budget = budgetDoc.data();
+                const totalSpent = transactions
+                    .filter(t =>
+                        t.data().category === budget.category &&
+                        t.data().date.toDate().getMonth() === currentMonth &&
+                        t.data().date.toDate().getFullYear() === currentYear
+                    )
+                    .reduce((sum, t) => sum + t.data().amount, 0);
+
+                const remaining = budget.amount - totalSpent;
+                const progressColor = remaining < 0 ? 'text-red-600' : 'text-green-600';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">${budget.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${budget.amount.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${totalSpent.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${progressColor}">${remaining.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300" data-id="${budgetDoc.id}" data-collection="${dbCollections.budgets}">
+                            Eliminar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    deleteDocument(e.target.dataset.collection, e.target.dataset.id);
+                });
+            });
+        };
+
+        const renderPortfolio = async () => {
+            const tbody = document.getElementById('portfolioTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 loading-text">Cargando cartera...</td></tr>';
+
+            const assetsSnapshot = await getDocs(query(collection(db, dbCollections.assets), where("userId", "==", userId)));
+            const assets = {};
+
+            assetsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!assets[data.symbol]) {
+                    assets[data.symbol] = { quantity: 0, totalCost: 0 };
+                }
+                if (data.type === 'buy') {
+                    assets[data.symbol].quantity += data.quantity;
+                    assets[data.symbol].totalCost += data.quantity * data.price;
+                } else if (data.type === 'sell') {
+                    assets[data.symbol].quantity -= data.quantity;
+                    assets[data.symbol].totalCost -= data.quantity * data.price;
+                }
+            });
+
+            tbody.innerHTML = '';
+            const symbols = Object.keys(assets);
+            if (symbols.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay activos en tu cartera.</td></tr>';
+                return;
+            }
+
+            for (const symbol of symbols) {
+                const asset = assets[symbol];
+                if (asset.quantity <= 0) continue;
+
+                const averagePrice = asset.totalCost / asset.quantity;
+                const lastPrice = 0; // Aquí deberías integrar una API de mercado para obtener el precio en tiempo real
+                const profitLoss = lastPrice > 0 ? (lastPrice - averagePrice) * asset.quantity : 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">${symbol}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${asset.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${averagePrice.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${lastPrice.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}">${profitLoss.toFixed(2)} €</td>
+                `;
+                tbody.appendChild(row);
+            }
+        };
+
+        const populateSelectOptions = (selectId, options, includePlaceholder = true) => {
+            const selectElem = document.getElementById(selectId);
+            selectElem.innerHTML = '';
+            if (includePlaceholder) {
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Seleccionar...';
+                selectElem.appendChild(placeholder);
+            }
+            options.forEach(optionText => {
+                const option = document.createElement('option');
+                option.value = optionText;
+                option.textContent = optionText;
+                selectElem.appendChild(option);
+            });
+        };
+
+        const renderSettings = (settings) => {
+            const categoryList = document.getElementById('categoryList');
+            const accountList = document.getElementById('accountList');
+            const accountingList = document.getElementById('accountingList');
+
+            const renderList = (listElement, items, settingType) => {
+                listElement.innerHTML = '';
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center space-x-2 bg-gray-200 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full';
+                    div.innerHTML = `
+                        <span>${item}</span>
+                        <button class="delete-setting-btn text-red-500 hover:text-red-700" data-setting-type="${settingType}" data-value="${item}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    `;
+                    listElement.appendChild(div);
+                });
+            };
+
+            renderList(categoryList, settings.categories, 'categories');
+            renderList(accountList, settings.accounts, 'accounts');
+            renderList(accountingList, settings.accountingBooks, 'accountingBooks');
+
+            document.querySelectorAll('.delete-setting-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    deleteSetting(e.currentTarget.dataset.settingType, e.currentTarget.dataset.value);
+                });
+            });
+
+            // Populate selects in other tabs
+            populateSelectOptions('category', settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
+            populateSelectOptions('recCategory', settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
+            populateSelectOptions('budgetCategory', settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
+            populateSelectOptions('account', settings.accounts);
+            populateSelectOptions('recAccount', settings.accounts);
+            populateSelectOptions('transferFrom', settings.accounts);
+            populateSelectOptions('transferTo', settings.accounts);
+            populateSelectOptions('accountingBook', settings.accountingBooks);
+            populateSelectOptions('recAccountingBook', settings.accountingBooks);
+            populateSelectOptions('transferAccountingBook', settings.accountingBooks);
+        };
+
+
+        const setupRealtimeListeners = (uid) => {
+            unsubscribeTransactions = onSnapshot(query(collection(db, dbCollections.transactions), where("userId", "==", uid)), (snapshot) => {
+                const transactions = snapshot.docs;
+                renderTransactions(transactions);
+                renderDashboard(transactions);
+            });
+            unsubscribeBudgets = onSnapshot(query(collection(db, dbCollections.budgets), where("userId", "==", uid)), (snapshot) => {
+                const budgets = snapshot.docs;
+                const transactionsQuery = query(collection(db, dbCollections.transactions), where("userId", "==", uid));
+                getDocs(transactionsQuery).then(transactionsSnapshot => {
+                    renderBudgets(budgets, transactionsSnapshot.docs);
+                });
+            });
+            unsubscribeAssets = onSnapshot(query(collection(db, dbCollections.assets), where("userId", "==", uid)), () => {
+                renderPortfolio();
+            });
+            unsubscribeSettings = onSnapshot(doc(db, dbCollections.userSettings, uid), (doc) => {
+                if (doc.exists()) {
+                    renderSettings(doc.data());
+                } else {
+                    const defaultSettings = {
+                        categories: ["Salario", "Inversiones", "Regalo", "Otros Ingresos", "Alquiler", "Comida", "Transporte", "Ocio", "Facturas", "Salud", "Educación", "Ropa", "Otros Gastos", "Transferencia", "Saldo Inicial"],
+                        accounts: ["Efectivo", "Cuenta Bancaria", "Tarjeta de Crédito"],
+                        accountingBooks: ["Principal"]
+                    };
+                    setDoc(doc(db, dbCollections.userSettings, uid), defaultSettings);
+                }
+            });
+        };
+
+        const cleanupRealtimeListeners = () => {
+            if (unsubscribeTransactions) unsubscribeTransactions();
+            if (unsubscribeBudgets) unsubscribeBudgets();
+            if (unsubscribeAssets) unsubscribeAssets();
+            if (unsubscribeSettings) unsubscribeSettings();
+        };
+
+        // Gráficos y Dashboard
+        let incomeExpenseChart, expenseCategoryChart, cashFlowChart;
+
+        const renderDashboard = (transactions) => {
+            renderAccountsSummary(transactions);
+            renderIncomeExpenseChart(transactions);
+            renderExpenseCategoryChart(transactions);
+            renderCashFlowChart(transactions);
+        };
+
+        const renderAccountsSummary = (transactions) => {
+            const summaryDiv = document.getElementById('accountsSummary');
+            const accounts = {};
+
+            transactions.forEach(doc => {
+                const data = doc.data();
+                if (!accounts[data.account]) accounts[data.account] = 0;
+
+                if (data.type === 'income') {
+                    accounts[data.account] += data.amount;
+                } else if (data.type === 'expense') {
+                    accounts[data.account] -= data.amount;
+                }
+            });
+
+            let html = '';
+            for (const account in accounts) {
+                html += `
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">${account}</span>
+                        <span class="text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span>
+                    </div>
+                `;
+            }
+            summaryDiv.innerHTML = html;
+        };
+
+        const renderIncomeExpenseChart = (transactions) => {
+            const currentMonthTransactions = transactions.filter(t => t.data().date.toDate().getMonth() === new Date().getMonth());
+            const income = currentMonthTransactions.filter(t => t.data().type === 'income').reduce((sum, t) => sum + t.data().amount, 0);
+            const expense = currentMonthTransactions.filter(t => t.data().type === 'expense').reduce((sum, t) => sum + t.data().amount, 0);
+
+            const data = {
+                labels: ['Ingresos', 'Gastos'],
+                datasets: [{
+                    data: [income, expense],
+                    backgroundColor: ['#4f46e5', '#ef4444']
+                }]
+            };
+
+            const config = {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (item) => `${item.label}: ${item.raw.toFixed(2)} €` } }
+                    }
+                }
+            };
+
+            if (incomeExpenseChart) incomeExpenseChart.destroy();
+            incomeExpenseChart = new Chart(document.getElementById('incomeExpenseChart'), config);
+        };
+
+        const renderExpenseCategoryChart = (transactions) => {
+            const expenseTransactions = transactions.filter(t => t.data().type === 'expense' && t.data().category !== 'Transferencia' && t.data().category !== 'Saldo Inicial');
+            const categories = expenseTransactions.reduce((acc, t) => {
+                const category = t.data().category;
+                acc[category] = (acc[category] || 0) + t.data().amount;
+                return acc;
+            }, {});
+
+            const data = {
+                labels: Object.keys(categories),
+                datasets: [{
+                    data: Object.values(categories),
+                    backgroundColor: [
+                        '#4c51bf', '#63b3ed', '#4fd1c5', '#f6ad55', '#e53e3e',
+                        '#d53f8c', '#a0aec0', '#9f7aea', '#38b2ac'
+                    ]
+                }]
+            };
+
+            const config = {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: { callbacks: { label: (item) => `${item.label}: ${item.raw.toFixed(2)} €` } }
+                    }
+                }
+            };
+
+            if (expenseCategoryChart) expenseCategoryChart.destroy();
+            expenseCategoryChart = new Chart(document.getElementById('expenseCategoryChart'), config);
+        };
+
+        const renderCashFlowChart = (transactions) => {
+            const monthlyData = {};
+            transactions.forEach(t => {
+                const date = t.data().date.toDate();
+                const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = { income: 0, expense: 0 };
+                }
+                if (t.data().type === 'income') {
+                    monthlyData[monthYear].income += t.data().amount;
+                } else {
+                    monthlyData[monthYear].expense += t.data().amount;
+                }
+            });
+
+            const labels = Object.keys(monthlyData).sort();
+            const incomeData = labels.map(label => monthlyData[label].income);
+            const expenseData = labels.map(label => monthlyData[label].expense);
+
+            const data = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: incomeData,
+                        backgroundColor: '#4f46e5',
+                        borderColor: '#4f46e5',
+                        borderWidth: 2,
+                        fill: false
+                    },
+                    {
+                        label: 'Gastos',
+                        data: expenseData,
+                        backgroundColor: '#ef4444',
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
+            };
+
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        title: { display: false },
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'Mes' }
+                        },
+                        y: {
+                            display: true,
+                            title: { display: true, text: 'Cantidad (€)' }
+                        }
+                    }
+                }
+            };
+
+            if (cashFlowChart) cashFlowChart.destroy();
+            cashFlowChart = new Chart(document.getElementById('cashFlowChart'), config);
+        };
+
+
+        // Event listeners
+        document.getElementById('registerTransactionBtn').addEventListener('click', () => {
+            document.getElementById('transactionMain').classList.add('hidden');
+            document.getElementById('transactionHistory').classList.add('hidden');
+            document.getElementById('transactionMenu').classList.remove('hidden');
+        });
+        document.getElementById('viewHistoryBtn').addEventListener('click', () => {
+            document.getElementById('transactionMain').classList.add('hidden');
+            document.getElementById('transactionMenu').classList.add('hidden');
+            document.getElementById('transactionContent').classList.add('hidden');
+            document.getElementById('transactionHistory').classList.remove('hidden');
+        });
+
+        document.getElementById('addIncomeBtn').addEventListener('click', () => {
+            document.getElementById('transactionMenu').classList.add('hidden');
+            document.getElementById('transactionContent').classList.remove('hidden');
+            document.getElementById('incomeExpenseForm').classList.remove('hidden');
+            document.getElementById('formTitle').textContent = 'Registrar Ingreso';
+            document.getElementById('type').value = 'income';
+        });
+        document.getElementById('addExpenseBtn').addEventListener('click', () => {
+            document.getElementById('transactionMenu').classList.add('hidden');
+            document.getElementById('transactionContent').classList.remove('hidden');
+            document.getElementById('incomeExpenseForm').classList.remove('hidden');
+            document.getElementById('formTitle').textContent = 'Registrar Gasto';
+            document.getElementById('type').value = 'expense';
+        });
+        document.getElementById('addTransferBtn').addEventListener('click', () => {
+            document.getElementById('transactionMenu').classList.add('hidden');
+            document.getElementById('transactionContent').classList.remove('hidden');
+            document.getElementById('transferForm').classList.remove('hidden');
+        });
+        document.getElementById('addRecurringBtn').addEventListener('click', () => {
+            document.getElementById('transactionMenu').classList.add('hidden');
+            document.getElementById('transactionContent').classList.remove('hidden');
+            document.getElementById('recurringForm').classList.remove('hidden');
+        });
+
+        document.getElementById('backFromFormBtn').addEventListener('click', () => {
+            document.getElementById('transactionContent').classList.add('hidden');
+            document.getElementById('transactionMenu').classList.remove('hidden');
+            resetTransactionForm();
+        });
+        document.getElementById('backFromHistoryBtn').addEventListener('click', () => {
+            document.getElementById('transactionHistory').classList.add('hidden');
+            document.getElementById('transactionMain').classList.remove('hidden');
+        });
+
+        document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
+        document.getElementById('transferFormElem').addEventListener('submit', saveTransfer);
+        document.getElementById('recurringFormElem').addEventListener('submit', saveRecurringTransaction);
+
+        document.getElementById('budgetForm').addEventListener('submit', saveBudget);
+        document.getElementById('brokerBuyBtn').addEventListener('click', () => {
+            document.getElementById('brokerMenu').classList.add('hidden');
+            document.getElementById('brokerContent').classList.remove('hidden');
+            document.getElementById('buyForm').classList.remove('hidden');
+            document.getElementById('sellForm').classList.add('hidden');
+            document.getElementById('consultContent').classList.add('hidden');
+        });
+        document.getElementById('brokerSellBtn').addEventListener('click', () => {
+            document.getElementById('brokerMenu').classList.add('hidden');
+            document.getElementById('brokerContent').classList.remove('hidden');
+            document.getElementById('buyForm').classList.add('hidden');
+            document.getElementById('sellForm').classList.remove('hidden');
+            document.getElementById('consultContent').classList.add('hidden');
+        });
+        document.getElementById('brokerConsultBtn').addEventListener('click', () => {
+            document.getElementById('brokerMenu').classList.add('hidden');
+            document.getElementById('brokerContent').classList.remove('hidden');
+            document.getElementById('buyForm').classList.add('hidden');
+            document.getElementById('sellForm').classList.add('hidden');
+            document.getElementById('consultContent').classList.remove('hidden');
+            renderPortfolio();
+        });
+        document.getElementById('backFromBrokerBtn').addEventListener('click', () => {
+            document.getElementById('brokerContent').classList.add('hidden');
+            document.getElementById('brokerMenu').classList.remove('hidden');
+        });
+        document.getElementById('brokerBuyForm').addEventListener('submit', saveAssetBuy);
+        document.getElementById('brokerSellForm').addEventListener('submit', saveAssetSell);
+
+        // Funciones para manejar la sección de Configuración
+const setupSettings = () => {
+    // Cargar y mostrar las cuentas
+    const accounts = getFromLocalStorage('accounts') || [];
+    const accountList = document.getElementById('accountList');
+    accountList.innerHTML = '';
+    accounts.forEach(account => {
+        const accountSpan = document.createElement('span');
+        accountSpan.textContent = account.name;
+        accountSpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
+        accountList.appendChild(accountSpan);
+    });
+
+    // Cargar y mostrar las categorías y contabilidades (si existen)
+    const categories = getFromLocalStorage('categories') || [];
+    const categoryList = document.getElementById('categoryList');
+    categoryList.innerHTML = '';
+    categories.forEach(category => {
+        const categorySpan = document.createElement('span');
+        categorySpan.textContent = category;
+        categorySpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
+        categoryList.appendChild(categorySpan);
+    });
+    
+    const accountingBooks = getFromLocalStorage('accountingBooks') || [];
+    const accountingList = document.getElementById('accountingList');
+    accountingList.innerHTML = '';
+    accountingBooks.forEach(book => {
+        const bookSpan = document.createElement('span');
+        bookSpan.textContent = book;
+        bookSpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
+        accountingList.appendChild(bookSpan);
+    });
+};
+
+// Eventos de los formularios en la sección de Configuración
+document.getElementById('categoryForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newCategory = document.getElementById('newCategory').value.trim();
+    if (newCategory) {
+        addSetting('categories', newCategory);
+        document.getElementById('newCategory').value = '';
+    }
+});
+
+// Funciones para manejar la sección de Configuración
+const setupSettings = () => {
+    // Escuchar cambios en la base de datos para mostrar las cuentas
+    if (userId) {
+        const db = getFirestore();
+        const accountsCollectionRef = collection(db, 'users', userId, 'accounts');
+        
+        onSnapshot(accountsCollectionRef, (snapshot) => {
+            const accounts = [];
+            snapshot.forEach(doc => {
+                accounts.push({ id: doc.id, ...doc.data() });
+            });
+            
+            const accountList = document.getElementById('accountList');
+            accountList.innerHTML = ''; // Limpiar la lista existente
+            
+            if (accounts.length === 0) {
+                accountList.innerHTML = '<span class="text-gray-500">No hay cuentas añadidas</span>';
+            } else {
+                accounts.forEach(account => {
+                    const accountContainer = document.createElement('div');
+                    accountContainer.classList.add('flex', 'justify-between', 'items-center', 'my-2');
+                    
+                    const accountSpan = document.createElement('span');
+                    accountSpan.textContent = account.name;
+                    accountSpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
+                    accountContainer.appendChild(accountSpan);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.095 21H7.905a2 2 0 01-1.938-1.858L5 7m5-2h4m-4 0V4a1 1 0 011-1h2a1 1 0 011 1v1m-6 0h6"/>
+                        </svg>
+                    `;
+                    deleteBtn.dataset.accountId = account.id;
+                    deleteBtn.classList.add('ml-2', 'focus:outline-none');
+                    accountContainer.appendChild(deleteBtn);
+                    
+                    accountList.appendChild(accountContainer);
+                });
+            }
+        });
+    }
+};
+
+// Evento para añadir una cuenta
+document.getElementById('accountForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const newAccountName = document.getElementById('newAccount').value.trim();
+    const initialBalance = parseFloat(document.getElementById('initialBalance').value) || 0;
+    
+    if (newAccountName) {
+        try {
+            if (!userId) {
+                console.error("Error: No hay un usuario autenticado.");
+                alert("Por favor, inicia sesión para registrar una cuenta.");
+                return;
+            }
+
+            const db = getFirestore();
+            const accountsCollectionRef = collection(db, 'users', userId, 'accounts');
+            
+            const newAccount = {
+                name: newAccountName,
+                balance: initialBalance,
+                createdAt: new Date()
+            };
+
+            await addDoc(accountsCollectionRef, newAccount);
+            
+            document.getElementById('newAccount').value = '';
+            document.getElementById('initialBalance').value = '0';
+            
+            console.log("Cuenta añadida con éxito a Firebase.");
+        } catch (error) {
+            console.error("Error al añadir la cuenta: ", error);
+        }
+    }
+});
+
+// Evento para eliminar una cuenta
+document.getElementById('accountList').addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('button');
+    if (deleteBtn && deleteBtn.dataset.accountId) {
+        const accountId = deleteBtn.dataset.accountId;
+        if (confirm("¿Estás seguro de que quieres eliminar esta cuenta?")) {
+            try {
+                if (!userId) {
+                    alert("Por favor, inicia sesión.");
+                    return;
+                }
+                const db = getFirestore();
+                const accountDocRef = doc(db, 'users', userId, 'accounts', accountId);
+                await deleteDoc(accountDocRef);
+                console.log("Cuenta eliminada con éxito.");
+            } catch (error) {
+                console.error("Error al eliminar la cuenta: ", error);
+            }
+        }
+    }
+});
+
+// La función setupRealtimeListeners ahora llamará a setupSettings
+const setupRealtimeListeners = (userId) => {
+    setupSettings();
+    // También puedes poner aquí los listeners para otras colecciones como 'transactions', 'categories', etc.
+};
+
+document.getElementById('accountingForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newAccountingBook = document.getElementById('newAccountingBook').value.trim();
+    if (newAccountingBook) {
+        addSetting('accountingBooks', newAccountingBook);
+        document.getElementById('newAccountingBook').value = '';
+    }
+});
+
+// Funciones para manejar la visibilidad de la sección de transacciones
+const showTransactionMain = () => {
+    document.getElementById('transactionMain').classList.remove('hidden');
+    document.getElementById('transactionMenu').classList.add('hidden');
+    document.getElementById('transactionContent').classList.add('hidden');
+};
+
+const showTransactionMenu = () => {
+    document.getElementById('transactionMain').classList.add('hidden');
+    document.getElementById('transactionMenu').classList.remove('hidden');
+    document.getElementById('transactionContent').classList.add('hidden');
+};
+
+const showTransactionForm = (type) => {
+    document.getElementById('transactionMain').classList.add('hidden');
+    document.getElementById('transactionMenu').classList.add('hidden');
+    document.getElementById('transactionContent').classList.remove('hidden');
+    document.getElementById('incomeExpenseForm').classList.remove('hidden');
+    document.getElementById('transferForm').classList.add('hidden');
+    document.getElementById('recurringForm').classList.add('hidden');
+    if (type === 'income') {
+        document.getElementById('formTitle').textContent = 'Registrar Ingreso';
+        document.getElementById('type').value = 'income';
+    } else {
+        document.getElementById('formTitle').textContent = 'Registrar Gasto';
+        document.getElementById('type').value = 'expense';
+    }
+};
+
+const showTransferForm = () => {
+    document.getElementById('transactionMain').classList.add('hidden');
+    document.getElementById('transactionMenu').classList.add('hidden');
+    document.getElementById('transactionContent').classList.remove('hidden');
+    document.getElementById('incomeExpenseForm').classList.add('hidden');
+    document.getElementById('transferForm').classList.remove('hidden');
+    document.getElementById('recurringForm').classList.add('hidden');
+};
+
+const showRecurringForm = () => {
+    document.getElementById('transactionMain').classList.add('hidden');
+    document.getElementById('transactionMenu').classList.add('hidden');
+    document.getElementById('transactionContent').classList.remove('hidden');
+    document.getElementById('incomeExpenseForm').classList.add('hidden');
+    document.getElementById('transferForm').classList.add('hidden');
+    document.getElementById('recurringForm').classList.remove('hidden');
+};
+
+// Asignar los eventos de click a los botones
+document.getElementById('registerTransactionBtn').addEventListener('click', showTransactionMenu);
+document.getElementById('backFromTransactionBtn').addEventListener('click', showTransactionMain);
+document.getElementById('backFromFormBtn').addEventListener('click', showTransactionMenu);
+
+// Eventos para los botones de tipo de transacción
+document.getElementById('addIncomeBtn').addEventListener('click', () => showTransactionForm('income'));
+document.getElementById('addExpenseBtn').addEventListener('click', () => showTransactionForm('expense'));
+document.getElementById('addTransferBtn').addEventListener('click', showTransferForm);
+document.getElementById('addRecurringBtn').addEventListener('click', showRecurringForm);
+
+
+        // Inicialización
+        document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('transferDate').valueAsDate = new Date();
+        document.getElementById('recStartDate').valueAsDate = new Date();
+        const initializeFinancesApp = () => {
+             onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    showMainApp(user);
+                    setupRealtimeListeners(userId);
+                } else {
+                    userId = null;
+                    cleanupRealtimeListeners();
+                    showAuthScreen();
+                }
+            });
+        };
+        initializeFinancesApp();
+    </script>
+</body>
+
+</html>
