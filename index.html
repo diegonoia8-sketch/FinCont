@@ -1466,114 +1466,48 @@ document.getElementById('categoryForm').addEventListener('submit', (e) => {
     }
 });
 
-// Funciones para manejar la sección de Configuración
-const setupSettings = () => {
-    // Escuchar cambios en la base de datos para mostrar las cuentas
-    if (userId) {
-        const db = getFirestore();
-        const accountsCollectionRef = collection(db, 'users', userId, 'accounts');
-        
-        onSnapshot(accountsCollectionRef, (snapshot) => {
-            const accounts = [];
-            snapshot.forEach(doc => {
-                accounts.push({ id: doc.id, ...doc.data() });
-            });
-            
-            const accountList = document.getElementById('accountList');
-            accountList.innerHTML = ''; // Limpiar la lista existente
-            
-            if (accounts.length === 0) {
-                accountList.innerHTML = '<span class="text-gray-500">No hay cuentas añadidas</span>';
-            } else {
-                accounts.forEach(account => {
-                    const accountContainer = document.createElement('div');
-                    accountContainer.classList.add('flex', 'justify-between', 'items-center', 'my-2');
-                    
-                    const accountSpan = document.createElement('span');
-                    accountSpan.textContent = account.name;
-                    accountSpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
-                    accountContainer.appendChild(accountSpan);
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.095 21H7.905a2 2 0 01-1.938-1.858L5 7m5-2h4m-4 0V4a1 1 0 011-1h2a1 1 0 011 1v1m-6 0h6"/>
-                        </svg>
-                    `;
-                    deleteBtn.dataset.accountId = account.id;
-                    deleteBtn.classList.add('ml-2', 'focus:outline-none');
-                    accountContainer.appendChild(deleteBtn);
-                    
-                    accountList.appendChild(accountContainer);
-                });
-            }
-        });
-    }
-};
-
-// Evento para añadir una cuenta
 document.getElementById('accountForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Obtener los valores del formulario
     const newAccountName = document.getElementById('newAccount').value.trim();
     const initialBalance = parseFloat(document.getElementById('initialBalance').value) || 0;
     
+    // Solo si se ha introducido un nombre de cuenta, continuar
     if (newAccountName) {
         try {
+            // El userId es crucial, debe estar disponible aquí para guardar los datos
             if (!userId) {
-                console.error("Error: No hay un usuario autenticado.");
+                console.error("Error: No hay un usuario autenticado para registrar la cuenta.");
                 alert("Por favor, inicia sesión para registrar una cuenta.");
                 return;
             }
 
+            // Referencia a la base de datos de Firestore
             const db = getFirestore();
             const accountsCollectionRef = collection(db, 'users', userId, 'accounts');
             
+            // Crear un objeto para la nueva cuenta
             const newAccount = {
                 name: newAccountName,
                 balance: initialBalance,
                 createdAt: new Date()
             };
 
+            // Añadir la nueva cuenta a la colección de Firestore
             await addDoc(accountsCollectionRef, newAccount);
             
+            // Limpiar los campos del formulario
             document.getElementById('newAccount').value = '';
             document.getElementById('initialBalance').value = '0';
             
             console.log("Cuenta añadida con éxito a Firebase.");
+
         } catch (error) {
             console.error("Error al añadir la cuenta: ", error);
         }
     }
 });
-
-// Evento para eliminar una cuenta
-document.getElementById('accountList').addEventListener('click', async (e) => {
-    const deleteBtn = e.target.closest('button');
-    if (deleteBtn && deleteBtn.dataset.accountId) {
-        const accountId = deleteBtn.dataset.accountId;
-        if (confirm("¿Estás seguro de que quieres eliminar esta cuenta?")) {
-            try {
-                if (!userId) {
-                    alert("Por favor, inicia sesión.");
-                    return;
-                }
-                const db = getFirestore();
-                const accountDocRef = doc(db, 'users', userId, 'accounts', accountId);
-                await deleteDoc(accountDocRef);
-                console.log("Cuenta eliminada con éxito.");
-            } catch (error) {
-                console.error("Error al eliminar la cuenta: ", error);
-            }
-        }
-    }
-});
-
-// La función setupRealtimeListeners ahora llamará a setupSettings
-const setupRealtimeListeners = (userId) => {
-    setupSettings();
-    // También puedes poner aquí los listeners para otras colecciones como 'transactions', 'categories', etc.
-};
 
 document.getElementById('accountingForm').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1665,3 +1599,4 @@ document.getElementById('addRecurringBtn').addEventListener('click', showRecurri
 </body>
 
 </html>
+
