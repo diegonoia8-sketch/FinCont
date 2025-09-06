@@ -1194,6 +1194,18 @@
                 } else if (data.type === 'expense') {
                     accounts[data.account] -= data.amount;
                 }
+                // Calculate total balance from all accounts
+                let totalBalance = 0;
+                    for (const account in accounts) {
+                    totalBalance += accounts[account];
+                }
+
+                 // Display total balance
+                 const totalBalanceSpan = document.getElementById('total-balance');
+                    if (totalBalanceSpan) {
+                    totalBalanceSpan.textContent = `$${totalBalance.toFixed(2)}`;
+                }
+                
             });
 
             let html = '';
