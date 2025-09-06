@@ -1466,46 +1466,21 @@ document.getElementById('categoryForm').addEventListener('submit', (e) => {
     }
 });
 
-document.getElementById('accountForm').addEventListener('submit', async (e) => {
+document.getElementById('accountForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
     // Obtener los valores del formulario
     const newAccountName = document.getElementById('newAccount').value.trim();
-    const initialBalance = parseFloat(document.getElementById('initialBalance').value) || 0;
-    
+    const initialBalance = document.getElementById('initialBalance').value;
+
     // Solo si se ha introducido un nombre de cuenta, continuar
     if (newAccountName) {
-        try {
-            // El userId es crucial, debe estar disponible aquí para guardar los datos
-            if (!userId) {
-                console.error("Error: No hay un usuario autenticado para registrar la cuenta.");
-                alert("Por favor, inicia sesión para registrar una cuenta.");
-                return;
-            }
-
-            // Referencia a la base de datos de Firestore
-            const db = getFirestore();
-            const accountsCollectionRef = collection(db, 'users', userId, 'accounts');
-            
-            // Crear un objeto para la nueva cuenta
-            const newAccount = {
-                name: newAccountName,
-                balance: initialBalance,
-                createdAt: new Date()
-            };
-
-            // Añadir la nueva cuenta a la colección de Firestore
-            await addDoc(accountsCollectionRef, newAccount);
-            
-            // Limpiar los campos del formulario
-            document.getElementById('newAccount').value = '';
-            document.getElementById('initialBalance').value = '0';
-            
-            console.log("Cuenta añadida con éxito a Firebase.");
-
-        } catch (error) {
-            console.error("Error al añadir la cuenta: ", error);
-        }
+        // Usamos la función genérica 'addSetting' que ya existe y funciona
+        addSetting('accounts', newAccountName, initialBalance);
+        
+        // Limpiar los campos del formulario
+        document.getElementById('newAccount').value = '';
+        document.getElementById('initialBalance').value = '0';
     }
 });
 
