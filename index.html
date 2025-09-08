@@ -34,6 +34,10 @@
                 opacity: .5;
             }
         }
+.pixelate-text {
+    filter: blur(5px);
+    transition: filter 0.3s ease-in-out;
+}
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -68,11 +72,20 @@
         <main class="flex-grow p-4 md:p-6 pb-20 overflow-y-auto">
             <div id="dashboard" class="tab-content grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Cuentas</h2>
-                    <div id="accountsSummary" class="space-y-4">
-                        <p class="text-sm text-gray-500 loading-text">Cargando resumen de cuentas...</p>
-                    </div>
-                </div>
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-800">Resumen de Cuentas</h2>
+        <div class="flex items-center">
+            <label for="toggleBalances" class="text-sm text-gray-600 mr-2">Ocultar saldos</label>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" id="toggleBalances" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+            </label>
+        </div>
+    </div>
+    <div id="accountsSummary" class="space-y-4">
+        <p class="text-sm text-gray-500 loading-text">Cargando resumen de cuentas...</p>
+    </div>
+</div>
 
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Ingresos vs Gastos</h2>
@@ -1583,6 +1596,34 @@ document.getElementById('addRecurringBtn').addEventListener('click', showRecurri
             });
         };
         initializeFinancesApp();
+// Función para aplicar o quitar el filtro de pixelado a los saldos
+const toggleBalancesVisibility = (shouldPixelate) => {
+    const accountBalanceElements = document.querySelectorAll('#accountsSummary');
+    accountBalanceElements.forEach(element => {
+        if (shouldPixelate) {
+            element.classList.add('pixelate-text');
+        } else {
+            element.classList.remove('pixelate-text');
+        }
+    });
+};
+
+// Evento para el interruptor de visibilidad de saldos
+const toggleBalances = document.getElementById('toggleBalances');
+if (toggleBalances) {
+    // Cargar el estado guardado al inicio
+    const isPixelated = localStorage.getItem('pixelateBalances') === 'true';
+    toggleBalances.checked = isPixelated;
+
+    // Aplicar el estado inicial
+    toggleBalancesVisibility(isPixelated);
+
+    // Guardar el estado al cambiar
+    toggleBalances.addEventListener('change', () => {
+        localStorage.setItem('pixelateBalances', toggleBalances.checked);
+        toggleBalancesVisibility(toggleBalances.checked);
+    });
+}
     </script>
 </body>
 
