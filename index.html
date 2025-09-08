@@ -1178,32 +1178,44 @@
         };
 
         const renderAccountsSummary = (transactions) => {
-            const summaryDiv = document.getElementById('accountsSummary');
-            const accounts = {};
+    const summaryDiv = document.getElementById('accountsSummary');
+    const accounts = {};
 
-            transactions.forEach(doc => {
-                const data = doc.data();
-                if (!accounts[data.account]) accounts[data.account] = 0;
+    transactions.forEach(doc => {
+        const data = doc.data();
+        if (!accounts[data.account]) accounts[data.account] = 0;
 
-                if (data.type === 'income') {
-                    accounts[data.account] += data.amount;
-                } else if (data.type === 'expense') {
-                    accounts[data.account] -= data.amount;
-                }
-    
-            });
+        if (data.type === 'income') {
+            accounts[data.account] += data.amount;
+        } else if (data.type === 'expense') {
+            accounts[data.account] -= data.amount;
+        }
+    });
 
-            let html = '';
-            for (const account in accounts) {
-                html += `
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-700">${account}</span>
-                        <span class="text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span>
-                    </div>
-                `;
-            }
-            summaryDiv.innerHTML = html;
-        };
+    let html = '';
+    let totalBalance = 0;
+
+    for (const account in accounts) {
+        totalBalance += accounts[account];
+        html += `
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-700">${account}</span>
+                <span class="text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span>
+            </div>
+        `;
+    }
+
+    // Se añade el HTML para el saldo total aquí, después de calcularlo
+    html += `
+        <div class="flex items-center justify-between mt-4 border-t pt-4">
+            <span class="text-base font-semibold text-gray-800">Saldo Total:</span>
+            <span id="totalBalance" class="text-xl font-bold text-indigo-600">${totalBalance.toFixed(2)} €</span>
+        </div>
+    `;
+
+    // Se actualiza el div una única vez con todo el contenido
+    summaryDiv.innerHTML = html;
+};
 
         const renderIncomeExpenseChart = (transactions) => {
             const currentMonthTransactions = transactions.filter(t => t.data().date.toDate().getMonth() === new Date().getMonth());
@@ -1575,4 +1587,3 @@ document.getElementById('addRecurringBtn').addEventListener('click', showRecurri
 </body>
 
 </html>
-
