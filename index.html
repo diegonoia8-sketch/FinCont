@@ -34,10 +34,10 @@
                 opacity: .5;
             }
         }
-.pixelate-text {
-    filter: blur(5px);
-    transition: filter 0.3s ease-in-out;
-}
+        .pixelate-text {
+            filter: blur(5px);
+            transition: filter 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -55,7 +55,7 @@
         <header class="bg-white shadow-sm py-4 px-6 flex items-center justify-between">
             <div class="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9" />
                 </svg>
                 <span class="text-xl font-bold text-gray-800">Finanzas Personales</span>
             </div>
@@ -63,29 +63,30 @@
                 <span id="userGreeting" class="text-gray-600 text-sm hidden md:block mr-4"></span>
                 <button id="signOutBtn" class="text-gray-500 hover:text-red-500 transition duration-300 focus:outline-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V4m-2 4h4a2 2 0 012 2v2m-2-4h-4a2 2 0 00-2 2v2" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V4m-2 4h4a2 2 0 012 2v2m-2-4h-4a2 2 0 00-2 2v2" />
                     </svg>
                 </button>
             </div>
         </header>
 
         <main class="flex-grow p-4 md:p-6 pb-20 overflow-y-auto">
+        
             <div id="dashboard" class="tab-content grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div class="bg-white p-6 rounded-lg shadow-sm">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-gray-800">Resumen de Cuentas</h2>
-        <div class="flex items-center">
-            <label for="toggleBalances" class="text-sm text-gray-600 mr-2">Ocultar saldos</label>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" value="" id="toggleBalances" class="sr-only peer">
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-            </label>
-        </div>
-    </div>
-    <div id="accountsSummary" class="space-y-4">
-        <p class="text-sm text-gray-500 loading-text">Cargando resumen de cuentas...</p>
-    </div>
-</div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Resumen de Cuentas</h2>
+                        <div class="flex items-center">
+                            <label for="toggleBalances" class="text-sm text-gray-600 mr-2">Ocultar saldos</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" value="" id="toggleBalances" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="accountsSummary" class="space-y-4">
+                        <p class="text-sm text-gray-500 loading-text">Cargando resumen de cuentas...</p>
+                    </div>
+                </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-sm">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Ingresos vs Gastos</h2>
@@ -159,7 +160,7 @@
                                 <label for="category" class="block text-sm font-medium text-gray-700">Categoría</label>
                                 <select id="category" name="category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
                                     <option value="">Seleccionar...</option>
-                                    </select>
+                                </select>
                             </div>
                             <div>
                                 <label for="date" class="block text-sm font-medium text-gray-700">Fecha</label>
@@ -169,13 +170,13 @@
                                 <label for="account" class="block text-sm font-medium text-gray-700">Cuenta</label>
                                 <select id="account" name="account" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
                                     <option value="">Seleccionar...</option>
-                                    </select>
+                                </select>
                             </div>
                             <div>
                                 <label for="accountingBook" class="block text-sm font-medium text-gray-700">Contabilidad</label>
                                 <select id="accountingBook" name="accountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
                                     <option value="">Seleccionar...</option>
-                                    </select>
+                                </select>
                             </div>
                             <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
                                 <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
@@ -289,14 +290,14 @@
                             <thead class="bg-gray-50 sticky top-0">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-    <div class="flex items-center">
-        <span>Fecha</span>
-        <div class="ml-2">
-            <button id="sortAscBtn" class="p-1 text-gray-400 hover:text-gray-600">▲</button>
-            <button id="sortDescBtn" class="p-1 text-gray-400 hover:text-gray-600">▼</button>
-        </div>
-    </div>
-</th>
+                                        <div class="flex items-center">
+                                            <span>Fecha</span>
+                                            <div class="ml-2">
+                                                <button id="sortAscBtn" class="p-1 text-gray-400 hover:text-gray-600 focus:outline-none">▲</button>
+                                                <button id="sortDescBtn" class="p-1 text-gray-400 hover:text-gray-600 focus:outline-none">▼</button>
+                                            </div>
+                                        </div>
+                                    </th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
@@ -487,7 +488,7 @@
                                 </button>
                             </form>
                             <div class="flex flex-wrap gap-2" id="categoryList">
-                                </div>
+                            </div>
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-800 mb-2">Cuentas</h3>
@@ -499,7 +500,7 @@
                                 </button>
                             </form>
                             <div class="flex flex-wrap gap-2" id="accountList">
-                                </div>
+                            </div>
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-800 mb-2">Contabilidades</h3>
@@ -510,7 +511,7 @@
                                 </button>
                             </form>
                             <div class="flex flex-wrap gap-2" id="accountingList">
-                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -609,15 +610,15 @@
         import { getFirestore, collection, addDoc, getDocs, doc, query, where, onSnapshot, serverTimestamp, deleteDoc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
- apiKey: "AIzaSyA2k5hvtCzAxClwmgxuiyiIzSa4UugZLas",
-  authDomain: "finance-control-35102.firebaseapp.com",
-  projectId: "finance-control-35102",
-  storageBucket: "finance-control-35102.firebasestorage.app",
-  messagingSenderId: "863606044392",
-  appId: "1:863606044392:web:9da74f5606f988b53b3b5d",
-  measurementId: "G-582WDX4234"
+            apiKey: "AIzaSyA2k5hvtCzAxClwmgxuiyiIzSa4UugZLas",
+            authDomain: "finance-control-35102.firebaseapp.com",
+            projectId: "finance-control-35102",
+            storageBucket: "finance-control-35102.appspot.com",
+            messagingSenderId: "863606044392",
+            appId: "1:863606044392:web:9da74f5606f988b53b3b5d",
+            measurementId: "G-582WDX4234"
         };
-
+        
         // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -672,6 +673,7 @@
 
         const getTabs = () => document.querySelectorAll('.tab-content');
         const getTabButtons = () => document.querySelectorAll('.tab-button');
+
         const showTab = (tabId) => {
             getTabs().forEach(tab => tab.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
@@ -721,7 +723,6 @@
                 userId: userId,
                 createdAt: serverTimestamp()
             };
-
             try {
                 const transactionId = transactionIdField.value;
                 if (transactionId) {
@@ -873,8 +874,15 @@
             if (!settingsData[settingType]) {
                 settingsData[settingType] = [];
             }
-            if (!settingsData[settingType].includes(value)) {
-                settingsData[settingType].push(value);
+            if (!settingsData[settingType].find(item => item.name === value || item === value)) { // Updated check for objects
+                
+                let newItem = value;
+                if (settingType === 'accounts') {
+                    newItem = { name: value, balance: parseFloat(initialBalance) || 0 };
+                }
+
+                settingsData[settingType].push(newItem);
+
                 try {
                     await setDoc(settingsRef, { [settingType]: settingsData[settingType] }, { merge: true });
                     alert(`El elemento "${value}" ha sido añadido.`);
@@ -907,7 +915,7 @@
                 const settingsRef = doc(db, dbCollections.userSettings, userId);
                 const settingsDoc = await getDoc(settingsRef);
                 const settingsData = settingsDoc.data();
-                const newArray = settingsData[settingType].filter(item => item !== value);
+                const newArray = settingsData[settingType].filter(item => (item.name || item) !== value);
                 try {
                     await updateDoc(settingsRef, { [settingType]: newArray });
                     alert("Elemento eliminado.");
@@ -942,7 +950,6 @@
             document.getElementById('formTitle').textContent = 'Editar Transacción';
             submitBtn.textContent = 'Guardar Cambios';
             transactionIdField.value = docId;
-
             document.getElementById('type').value = transaction.type;
             document.getElementById('description').value = transaction.description;
             document.getElementById('amount').value = transaction.amount;
@@ -951,73 +958,57 @@
             document.getElementById('account').value = transaction.account;
             document.getElementById('accountingBook').value = transaction.accountingBook;
         };
-
+        
+        // ===== INICIO DE LAS MODIFICACIONES JAVASCRIPT =====
+        
         let transactionsData = [];
-let sortOrder = 'desc'; // 'asc' para ascendente, 'desc' para descendente
+        let sortOrder = 'desc'; // 'desc' para descendente (por defecto), 'asc' para ascendente
 
-const renderTransactions = (transactions) => {
-    transactionsData = transactions.map(d => ({id: d.id, ...d.data()}));
+        const renderTransactions = (transactions) => {
+            // Si la data ya está en `transactionsData` (como cuando re-ordenamos), no la mapeamos de nuevo
+            if (transactions !== transactionsData) {
+                transactionsData = transactions.map(d => ({id: d.id, ...d.data()}));
+            }
 
-    // ¡Aquí está la magia! Ordenamos los datos
-    transactionsData.sort((a, b) => {
-        const dateA = a.date ? a.date.seconds : 0;
-        const dateB = b.date ? b.date.seconds : 0;
-        if (sortOrder === 'asc') {
-            return dateA - dateB;
-        } else {
-            return dateB - dateA;
-        }
-    });
+            // Lógica para ordenar el array de transacciones
+            transactionsData.sort((a, b) => {
+                const dateA = a.date ? a.date.seconds : 0;
+                const dateB = b.date ? b.date.seconds : 0;
+                if (sortOrder === 'asc') {
+                    return dateA - dateB; // Orden ascendente
+                } else {
+                    return dateB - dateA; // Orden descendente
+                }
+            });
 
-    const tbody = document.getElementById('transactionsTableBody');
-    tbody.innerHTML = '';
-    if (transactionsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay transacciones registradas.</td></tr>';
-        return;
-    }
-    transactionsData.forEach(data => {
-        const row = document.createElement('tr');
-        row.className = data.type === 'expense' ? 'bg-red-50' : 'bg-green-50';
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.date ? new Date(data.date.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">${data.type === 'income' ? 'Ingreso' : 'Gasto'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.description}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${data.amount.toFixed(2)} €</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">${data.category}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">${data.account}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">${data.accountingBook || 'N/A'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="edit-btn text-indigo-600 hover:text-indigo-900 transition duration-300 mr-2" data-id="${data.id}">
-                    Editar
-                </button>
-                <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300" data-id="${data.id}" data-collection="${dbCollections.transactions}">
-                    Eliminar
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-// Eventos para los botones de ordenamiento
-document.getElementById('sortAscBtn').addEventListener('click', () => {
-    sortOrder = 'asc';
-    renderTransactions(transactionsData.map(t => ({ id: t.id, data: () => t }))); // Re-renderizar con el nuevo orden
-});
-
-document.getElementById('sortDescBtn').addEventListener('click', () => {
-    sortOrder = 'desc';
-    renderTransactions(transactionsData.map(t => ({ id: t.id, data: () => t }))); // Re-renderizar con el nuevo orden
-});
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            deleteDocument(e.target.dataset.collection, e.target.dataset.id);
-        });
-    });
-    document.querySelectorAll('.edit-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            editTransaction(e.target.dataset.id);
-        });
-    });
-};
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = '';
+            if (transactionsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay transacciones registradas.</td></tr>';
+                return;
+            }
+            transactionsData.forEach(data => {
+                const row = document.createElement('tr');
+                row.className = data.type === 'expense' ? 'bg-red-50' : 'bg-green-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.date ? new Date(data.date.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.type === 'income' ? 'Ingreso' : 'Gasto'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${data.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">${data.amount.toFixed(2)} €</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.category}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.account}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${data.accountingBook || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="edit-btn text-indigo-600 hover:text-indigo-900 transition duration-300 mr-2" data-id="${data.id}">
+                            Editar
+                        </button>
+                        <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300" data-id="${data.id}" data-collection="${dbCollections.transactions}">
+                            Eliminar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
             document.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     deleteDocument(e.target.dataset.collection, e.target.dataset.id);
@@ -1029,6 +1020,8 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                 });
             });
         };
+
+        // ===== FIN DE LAS MODIFICACIONES JAVASCRIPT =====
 
         const renderBudgets = (budgets, transactions) => {
             const tbody = document.getElementById('budgetsTableBody');
@@ -1045,8 +1038,8 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                 const totalSpent = transactions
                     .filter(t =>
                         t.data().category === budget.category &&
-                        t.data().date.toDate().getMonth() === currentMonth &&
-                        t.data().date.toDate().getFullYear() === currentYear
+                        new Date(t.data().date.seconds * 1000).getMonth() === currentMonth &&
+                        new Date(t.data().date.seconds * 1000).getFullYear() === currentYear
                     )
                     .reduce((sum, t) => sum + t.data().amount, 0);
 
@@ -1077,10 +1070,8 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
         const renderPortfolio = async () => {
             const tbody = document.getElementById('portfolioTableBody');
             tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 loading-text">Cargando cartera...</td></tr>';
-
             const assetsSnapshot = await getDocs(query(collection(db, dbCollections.assets), where("userId", "==", userId)));
             const assets = {};
-
             assetsSnapshot.forEach(doc => {
                 const data = doc.data();
                 if (!assets[data.symbol]) {
@@ -1094,7 +1085,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     assets[data.symbol].totalCost -= data.quantity * data.price;
                 }
             });
-
             tbody.innerHTML = '';
             const symbols = Object.keys(assets);
             if (symbols.length === 0) {
@@ -1107,8 +1097,10 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                 if (asset.quantity <= 0) continue;
 
                 const averagePrice = asset.totalCost / asset.quantity;
-                const lastPrice = 0; // Aquí deberías integrar una API de mercado para obtener el precio en tiempo real
-                const profitLoss = lastPrice > 0 ? (lastPrice - averagePrice) * asset.quantity : 0;
+                const lastPrice = 0;
+                // Aquí deberías integrar una API de mercado para obtener el precio en tiempo real
+                const profitLoss = lastPrice > 0 ?
+                    (lastPrice - averagePrice) * asset.quantity : 0;
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -1148,10 +1140,11 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                 listElement.innerHTML = '';
                 items.forEach(item => {
                     const div = document.createElement('div');
+                    const itemName = typeof item === 'object' ? item.name : item; // Handle both strings and objects
                     div.className = 'flex items-center space-x-2 bg-gray-200 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full';
                     div.innerHTML = `
-                        <span>${item}</span>
-                        <button class="delete-setting-btn text-red-500 hover:text-red-700" data-setting-type="${settingType}" data-value="${item}">
+                        <span>${itemName}</span>
+                        <button class="delete-setting-btn text-red-500 hover:text-red-700" data-setting-type="${settingType}" data-value="${itemName}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -1161,9 +1154,13 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                 });
             };
 
-            renderList(categoryList, settings.categories, 'categories');
-            renderList(accountList, settings.accounts, 'accounts');
-            renderList(accountingList, settings.accountingBooks, 'accountingBooks');
+            const categories = settings.categories || [];
+            const accounts = settings.accounts || [];
+            const accountingBooks = settings.accountingBooks || [];
+            
+            renderList(categoryList, categories, 'categories');
+            renderList(accountList, accounts, 'accounts');
+            renderList(accountingList, accountingBooks, 'accountingBooks');
 
             document.querySelectorAll('.delete-setting-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -1172,25 +1169,26 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
             });
 
             // Populate selects in other tabs
-            populateSelectOptions('category', settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
-            populateSelectOptions('recCategory', settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
-            populateSelectOptions('budgetCategory', settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
-            populateSelectOptions('account', settings.accounts);
-            populateSelectOptions('recAccount', settings.accounts);
-            populateSelectOptions('transferFrom', settings.accounts);
-            populateSelectOptions('transferTo', settings.accounts);
-            populateSelectOptions('accountingBook', settings.accountingBooks);
-            populateSelectOptions('recAccountingBook', settings.accountingBooks);
-            populateSelectOptions('transferAccountingBook', settings.accountingBooks);
+            populateSelectOptions('category', categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
+            populateSelectOptions('recCategory', categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
+            populateSelectOptions('budgetCategory', categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial'));
+            populateSelectOptions('account', accounts.map(a => a.name || a));
+            populateSelectOptions('recAccount', accounts.map(a => a.name || a));
+            populateSelectOptions('transferFrom', accounts.map(a => a.name || a));
+            populateSelectOptions('transferTo', accounts.map(a => a.name || a));
+            populateSelectOptions('accountingBook', accountingBooks);
+            populateSelectOptions('recAccountingBook', accountingBooks);
+            populateSelectOptions('transferAccountingBook', accountingBooks);
         };
 
 
         const setupRealtimeListeners = (uid) => {
             unsubscribeTransactions = onSnapshot(query(collection(db, dbCollections.transactions), where("userId", "==", uid)), (snapshot) => {
                 const transactions = snapshot.docs;
-                renderTransactions(transactions);
+                renderTransactions(transactions); // This will now sort by default
                 renderDashboard(transactions);
             });
+
             unsubscribeBudgets = onSnapshot(query(collection(db, dbCollections.budgets), where("userId", "==", uid)), (snapshot) => {
                 const budgets = snapshot.docs;
                 const transactionsQuery = query(collection(db, dbCollections.transactions), where("userId", "==", uid));
@@ -1198,16 +1196,18 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     renderBudgets(budgets, transactionsSnapshot.docs);
                 });
             });
+
             unsubscribeAssets = onSnapshot(query(collection(db, dbCollections.assets), where("userId", "==", uid)), () => {
                 renderPortfolio();
             });
+
             unsubscribeSettings = onSnapshot(doc(db, dbCollections.userSettings, uid), (doc) => {
                 if (doc.exists()) {
                     renderSettings(doc.data());
                 } else {
                     const defaultSettings = {
                         categories: ["Salario", "Inversiones", "Regalo", "Otros Ingresos", "Alquiler", "Comida", "Transporte", "Ocio", "Facturas", "Salud", "Educación", "Ropa", "Otros Gastos", "Transferencia", "Saldo Inicial"],
-                        accounts: ["Efectivo", "Cuenta Bancaria", "Tarjeta de Crédito"],
+                        accounts: [{name: "Efectivo", balance: 0}, {name: "Cuenta Bancaria", balance: 0}, {name: "Tarjeta de Crédito", balance: 0}],
                         accountingBooks: ["Principal"]
                     };
                     setDoc(doc(db, dbCollections.userSettings, uid), defaultSettings);
@@ -1233,50 +1233,43 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
         };
 
         const renderAccountsSummary = (transactions) => {
-    const summaryDiv = document.getElementById('accountsSummary');
-    const accounts = {};
+            const summaryDiv = document.getElementById('accountsSummary');
+            const accounts = {};
+            transactions.forEach(doc => {
+                const data = doc.data();
+                if (!accounts[data.account]) accounts[data.account] = 0;
 
-    transactions.forEach(doc => {
-        const data = doc.data();
-        if (!accounts[data.account]) accounts[data.account] = 0;
+                if (data.type === 'income') {
+                    accounts[data.account] += data.amount;
+                } else if (data.type === 'expense') {
+                    accounts[data.account] -= data.amount;
+                }
+            });
+            let html = '';
+            let totalBalance = 0;
 
-        if (data.type === 'income') {
-            accounts[data.account] += data.amount;
-        } else if (data.type === 'expense') {
-            accounts[data.account] -= data.amount;
-        }
-    });
-
-    let html = '';
-    let totalBalance = 0;
-
-    for (const account in accounts) {
-        totalBalance += accounts[account];
-        html += `
-            <div class="flex justify-between items-center">
-                <span class="text-sm font-medium text-gray-700">${account}</span>
-                <span class="text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span>
-            </div>
-        `;
-    }
-
-    // Se añade el HTML para el saldo total aquí, después de calcularlo
-    html += `
-        <div class="flex items-center justify-between mt-4 border-t pt-4">
-            <span class="text-base font-semibold text-gray-800">Saldo Total:</span>
-            <span id="totalBalance" class="text-xl font-bold text-indigo-600">${totalBalance.toFixed(2)} €</span>
-        </div>
-    `;
-
-    // Se actualiza el div una única vez con todo el contenido
-    summaryDiv.innerHTML = html;
-};
+            for (const account in accounts) {
+                totalBalance += accounts[account];
+                html += `
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">${account}</span>
+                        <span class="text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span>
+                    </div>
+                `;
+            }
+            html += `
+                <div class="flex items-center justify-between mt-4 border-t pt-4">
+                    <span class="text-base font-semibold text-gray-800">Saldo Total:</span>
+                    <span id="totalBalance" class="text-xl font-bold text-indigo-600">${totalBalance.toFixed(2)} €</span>
+                </div>
+            `;
+            summaryDiv.innerHTML = html;
+        };
 
         const renderIncomeExpenseChart = (transactions) => {
-            const currentMonthTransactions = transactions.filter(t => t.data().date.toDate().getMonth() === new Date().getMonth());
+            const currentMonthTransactions = transactions.filter(t => new Date(t.data().date.seconds * 1000).getMonth() === new Date().getMonth());
             const income = currentMonthTransactions.filter(t => t.data().type === 'income').reduce((sum, t) => sum + t.data().amount, 0);
             const expense = currentMonthTransactions.filter(t => t.data().type === 'expense').reduce((sum, t) => sum + t.data().amount, 0);
-
             const data = {
                 labels: ['Ingresos', 'Gastos'],
                 datasets: [{
@@ -1284,7 +1277,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     backgroundColor: ['#4f46e5', '#ef4444']
                 }]
             };
-
             const config = {
                 type: 'doughnut',
                 data: data,
@@ -1296,7 +1288,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     }
                 }
             };
-
             if (incomeExpenseChart) incomeExpenseChart.destroy();
             incomeExpenseChart = new Chart(document.getElementById('incomeExpenseChart'), config);
         };
@@ -1308,7 +1299,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                 acc[category] = (acc[category] || 0) + t.data().amount;
                 return acc;
             }, {});
-
             const data = {
                 labels: Object.keys(categories),
                 datasets: [{
@@ -1319,7 +1309,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     ]
                 }]
             };
-
             const config = {
                 type: 'pie',
                 data: data,
@@ -1331,7 +1320,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     }
                 }
             };
-
             if (expenseCategoryChart) expenseCategoryChart.destroy();
             expenseCategoryChart = new Chart(document.getElementById('expenseCategoryChart'), config);
         };
@@ -1339,8 +1327,8 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
         const renderCashFlowChart = (transactions) => {
             const monthlyData = {};
             transactions.forEach(t => {
-                const date = t.data().date.toDate();
-                const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                const date = new Date(t.data().date.seconds * 1000);
+                const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                 if (!monthlyData[monthYear]) {
                     monthlyData[monthYear] = { income: 0, expense: 0 };
                 }
@@ -1354,7 +1342,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
             const labels = Object.keys(monthlyData).sort();
             const incomeData = labels.map(label => monthlyData[label].income);
             const expenseData = labels.map(label => monthlyData[label].expense);
-
             const data = {
                 labels: labels,
                 datasets: [
@@ -1376,7 +1363,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     }
                 ]
             };
-
             const config = {
                 type: 'line',
                 data: data,
@@ -1401,7 +1387,6 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
                     }
                 }
             };
-
             if (cashFlowChart) cashFlowChart.destroy();
             cashFlowChart = new Chart(document.getElementById('cashFlowChart'), config);
         };
@@ -1419,17 +1404,20 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
             document.getElementById('transactionContent').classList.add('hidden');
             document.getElementById('transactionHistory').classList.remove('hidden');
         });
-
         document.getElementById('addIncomeBtn').addEventListener('click', () => {
+            resetTransactionForm();
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms();
             document.getElementById('incomeExpenseForm').classList.remove('hidden');
             document.getElementById('formTitle').textContent = 'Registrar Ingreso';
             document.getElementById('type').value = 'income';
         });
         document.getElementById('addExpenseBtn').addEventListener('click', () => {
+            resetTransactionForm();
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms();
             document.getElementById('incomeExpenseForm').classList.remove('hidden');
             document.getElementById('formTitle').textContent = 'Registrar Gasto';
             document.getElementById('type').value = 'expense';
@@ -1437,14 +1425,15 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
         document.getElementById('addTransferBtn').addEventListener('click', () => {
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms();
             document.getElementById('transferForm').classList.remove('hidden');
         });
         document.getElementById('addRecurringBtn').addEventListener('click', () => {
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms();
             document.getElementById('recurringForm').classList.remove('hidden');
         });
-
         document.getElementById('backFromFormBtn').addEventListener('click', () => {
             document.getElementById('transactionContent').classList.add('hidden');
             document.getElementById('transactionMenu').classList.remove('hidden');
@@ -1454,6 +1443,18 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
             document.getElementById('transactionHistory').classList.add('hidden');
             document.getElementById('transactionMain').classList.remove('hidden');
         });
+        
+        // ===== Event Listeners para los botones de ordenamiento =====
+        document.getElementById('sortAscBtn').addEventListener('click', () => {
+            sortOrder = 'asc';
+            renderTransactions(transactionsData); // Re-renderizar con el nuevo orden
+        });
+
+        document.getElementById('sortDescBtn').addEventListener('click', () => {
+            sortOrder = 'desc';
+            renderTransactions(transactionsData); // Re-renderizar con el nuevo orden
+        });
+
 
         document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
         document.getElementById('transferFormElem').addEventListener('submit', saveTransfer);
@@ -1488,142 +1489,42 @@ document.getElementById('sortDescBtn').addEventListener('click', () => {
         });
         document.getElementById('brokerBuyForm').addEventListener('submit', saveAssetBuy);
         document.getElementById('brokerSellForm').addEventListener('submit', saveAssetSell);
-
-        // Funciones para manejar la sección de Configuración
-const setupSettings = () => {
-    // Cargar y mostrar las cuentas
-    const accounts = getFromLocalStorage('accounts') || [];
-    const accountList = document.getElementById('accountList');
-    accountList.innerHTML = '';
-    accounts.forEach(account => {
-        const accountSpan = document.createElement('span');
-        accountSpan.textContent = account.name;
-        accountSpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
-        accountList.appendChild(accountSpan);
-    });
-
-    // Cargar y mostrar las categorías y contabilidades (si existen)
-    const categories = getFromLocalStorage('categories') || [];
-    const categoryList = document.getElementById('categoryList');
-    categoryList.innerHTML = '';
-    categories.forEach(category => {
-        const categorySpan = document.createElement('span');
-        categorySpan.textContent = category;
-        categorySpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
-        categoryList.appendChild(categorySpan);
-    });
-    
-    const accountingBooks = getFromLocalStorage('accountingBooks') || [];
-    const accountingList = document.getElementById('accountingList');
-    accountingList.innerHTML = '';
-    accountingBooks.forEach(book => {
-        const bookSpan = document.createElement('span');
-        bookSpan.textContent = book;
-        bookSpan.classList.add('bg-gray-200', 'text-gray-800', 'text-sm', 'font-medium', 'px-2.5', 'py-0.5', 'rounded-full');
-        accountingList.appendChild(bookSpan);
-    });
-};
-
-// Eventos de los formularios en la sección de Configuración
-document.getElementById('categoryForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newCategory = document.getElementById('newCategory').value.trim();
-    if (newCategory) {
-        addSetting('categories', newCategory);
-        document.getElementById('newCategory').value = '';
-    }
-});
-
-document.getElementById('accountForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    // Obtener los valores del formulario
-    const newAccountName = document.getElementById('newAccount').value.trim();
-    const initialBalance = document.getElementById('initialBalance').value;
-
-    // Solo si se ha introducido un nombre de cuenta, continuar
-    if (newAccountName) {
-        // Usamos la función genérica 'addSetting' que ya existe y funciona
-        addSetting('accounts', newAccountName, initialBalance);
         
-        // Limpiar los campos del formulario
-        document.getElementById('newAccount').value = '';
-        document.getElementById('initialBalance').value = '0';
-    }
-});
+        document.getElementById('categoryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newCategory = document.getElementById('newCategory').value.trim();
+            if (newCategory) {
+                addSetting('categories', newCategory);
+                document.getElementById('newCategory').value = '';
+            }
+        });
 
-document.getElementById('accountingForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newAccountingBook = document.getElementById('newAccountingBook').value.trim();
-    if (newAccountingBook) {
-        addSetting('accountingBooks', newAccountingBook);
-        document.getElementById('newAccountingBook').value = '';
-    }
-});
+        document.getElementById('accountForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newAccountName = document.getElementById('newAccount').value.trim();
+            const initialBalance = document.getElementById('initialBalance').value;
 
-// Funciones para manejar la visibilidad de la sección de transacciones
-const showTransactionMain = () => {
-    document.getElementById('transactionMain').classList.remove('hidden');
-    document.getElementById('transactionMenu').classList.add('hidden');
-    document.getElementById('transactionContent').classList.add('hidden');
-};
+            if (newAccountName) {
+                addSetting('accounts', newAccountName, initialBalance);
+                document.getElementById('newAccount').value = '';
+                document.getElementById('initialBalance').value = '0';
+            }
+        });
 
-const showTransactionMenu = () => {
-    document.getElementById('transactionMain').classList.add('hidden');
-    document.getElementById('transactionMenu').classList.remove('hidden');
-    document.getElementById('transactionContent').classList.add('hidden');
-};
-
-const showTransactionForm = (type) => {
-    document.getElementById('transactionMain').classList.add('hidden');
-    document.getElementById('transactionMenu').classList.add('hidden');
-    document.getElementById('transactionContent').classList.remove('hidden');
-    document.getElementById('incomeExpenseForm').classList.remove('hidden');
-    document.getElementById('transferForm').classList.add('hidden');
-    document.getElementById('recurringForm').classList.add('hidden');
-    if (type === 'income') {
-        document.getElementById('formTitle').textContent = 'Registrar Ingreso';
-        document.getElementById('type').value = 'income';
-    } else {
-        document.getElementById('formTitle').textContent = 'Registrar Gasto';
-        document.getElementById('type').value = 'expense';
-    }
-};
-
-const showTransferForm = () => {
-    document.getElementById('transactionMain').classList.add('hidden');
-    document.getElementById('transactionMenu').classList.add('hidden');
-    document.getElementById('transactionContent').classList.remove('hidden');
-    document.getElementById('incomeExpenseForm').classList.add('hidden');
-    document.getElementById('transferForm').classList.remove('hidden');
-    document.getElementById('recurringForm').classList.add('hidden');
-};
-
-const showRecurringForm = () => {
-    document.getElementById('transactionMain').classList.add('hidden');
-    document.getElementById('transactionMenu').classList.add('hidden');
-    document.getElementById('transactionContent').classList.remove('hidden');
-    document.getElementById('incomeExpenseForm').classList.add('hidden');
-    document.getElementById('transferForm').classList.add('hidden');
-    document.getElementById('recurringForm').classList.remove('hidden');
-};
-
-// Asignar los eventos de click a los botones
-document.getElementById('registerTransactionBtn').addEventListener('click', showTransactionMenu);
-document.getElementById('backFromTransactionBtn').addEventListener('click', showTransactionMain);
-document.getElementById('backFromFormBtn').addEventListener('click', showTransactionMenu);
-
-// Eventos para los botones de tipo de transacción
-document.getElementById('addIncomeBtn').addEventListener('click', () => showTransactionForm('income'));
-document.getElementById('addExpenseBtn').addEventListener('click', () => showTransactionForm('expense'));
-document.getElementById('addTransferBtn').addEventListener('click', showTransferForm);
-document.getElementById('addRecurringBtn').addEventListener('click', showRecurringForm);
-
+        document.getElementById('accountingForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newAccountingBook = document.getElementById('newAccountingBook').value.trim();
+            if (newAccountingBook) {
+                addSetting('accountingBooks', newAccountingBook);
+                document.getElementById('newAccountingBook').value = '';
+            }
+        });
 
         // Inicialización
         document.getElementById('date').valueAsDate = new Date();
         document.getElementById('transferDate').valueAsDate = new Date();
         document.getElementById('recStartDate').valueAsDate = new Date();
+
         const initializeFinancesApp = () => {
              onAuthStateChanged(auth, (user) => {
                 if (user) {
@@ -1638,35 +1539,29 @@ document.getElementById('addRecurringBtn').addEventListener('click', showRecurri
             });
         };
         initializeFinancesApp();
-// Función para aplicar o quitar el filtro de pixelado a los saldos
-const toggleBalancesVisibility = (shouldPixelate) => {
-    const accountBalanceElements = document.querySelectorAll('#accountsSummary');
-    accountBalanceElements.forEach(element => {
-        if (shouldPixelate) {
-            element.classList.add('pixelate-text');
-        } else {
-            element.classList.remove('pixelate-text');
+
+        const toggleBalancesVisibility = (shouldPixelate) => {
+            const balanceElements = document.querySelectorAll('#accountsSummary span.text-sm.font-bold, #totalBalance');
+            balanceElements.forEach(element => {
+                if (shouldPixelate) {
+                    element.classList.add('pixelate-text');
+                } else {
+                    element.classList.remove('pixelate-text');
+                }
+            });
+        };
+
+        const toggleBalancesSwitch = document.getElementById('toggleBalances');
+        if (toggleBalancesSwitch) {
+            const isPixelated = localStorage.getItem('pixelateBalances') === 'true';
+            toggleBalancesSwitch.checked = isPixelated;
+            toggleBalancesVisibility(isPixelated);
+
+            toggleBalancesSwitch.addEventListener('change', () => {
+                localStorage.setItem('pixelateBalances', toggleBalancesSwitch.checked);
+                toggleBalancesVisibility(toggleBalancesSwitch.checked);
+            });
         }
-    });
-};
-
-// Evento para el interruptor de visibilidad de saldos
-const toggleBalances = document.getElementById('toggleBalances');
-if (toggleBalances) {
-    // Cargar el estado guardado al inicio
-    const isPixelated = localStorage.getItem('pixelateBalances') === 'true';
-    toggleBalances.checked = isPixelated;
-
-    // Aplicar el estado inicial
-    toggleBalancesVisibility(isPixelated);
-
-    // Guardar el estado al cambiar
-    toggleBalances.addEventListener('change', () => {
-        localStorage.setItem('pixelateBalances', toggleBalances.checked);
-        toggleBalancesVisibility(toggleBalances.checked);
-    });
-}
     </script>
 </body>
-
 </html>
