@@ -289,6 +289,19 @@
                             </button>
                         </div>
                     </form>
+
+                    <div id="historyChartContainer" class="bg-white p-6 rounded-lg shadow-sm mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Análisis de Categorías (Filtrado)</h3>
+                        <div class="mb-4 w-full md:w-1/4">
+                            <label for="historyChartType" class="block text-sm font-medium text-gray-700">Tipo</label>
+                            <select id="historyChartType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                <option value="expense">Gastos</option>
+                                <option value="income">Ingresos</option>
+                            </select>
+                        </div>
+                        <canvas id="historyChart"></canvas>
+                    </div>
+
                     <div class="table-container">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 sticky top-0">
@@ -312,7 +325,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <div id="settings" class="tab-content hidden">
                 <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestionar Atributos</h2>
@@ -431,16 +444,13 @@
         const authScreen = document.getElementById('authScreen');
         const mainApp = document.getElementById('mainApp');
         const userGreeting = document.getElementById('userGreeting');
-        // IDs de 'Profile' eliminados: userPhoto, displayName, emailAddress, lastSignInTime
         const submitBtn = document.getElementById('submitBtn');
         const transactionIdField = document.getElementById('transactionId');
 
         let userId = null;
         let unsubscribeTransactions;
-        // 'unsubscribeBudgets', 'unsubscribeAssets' eliminados
         let unsubscribeSettings;
 
-        // Almacenará todas las transacciones del usuario para filtrado en cliente
         let allUserTransactions = [];
         
         const showAuthScreen = () => {
@@ -452,7 +462,6 @@
             authScreen.classList.add('hidden');
             mainApp.classList.remove('hidden');
             userGreeting.textContent = `Hola, ${user.displayName.split(' ')[0]}`;
-            // Lógica de 'Profile' eliminada
         };
 
         signInBtn.addEventListener('click', async () => {
@@ -476,7 +485,6 @@
             getTabs().forEach(tab => tab.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
             getTabButtons().forEach(button => button.classList.remove('active'));
-            // Activar botones en ambas navbars (móvil y escritorio)
             document.querySelectorAll(`.tab-button[data-tab="${tabId}"]`).forEach(btn => btn.classList.add('active'));
         };
 
@@ -486,17 +494,14 @@
             });
         });
         
-        // Funciones de manejo de datos
         const dbCollections = {
             transactions: "transactions",
-            // 'budgets', 'assets', 'recurringTransactions' eliminados
             userSettings: "userSettings"
         };
         
         const hideAllTransactionForms = () => {
             document.getElementById('incomeExpenseForm').classList.add('hidden');
             document.getElementById('transferForm').classList.add('hidden');
-            // 'recurringForm' eliminado
         };
         
         const resetTransactionForm = () => {
@@ -561,7 +566,6 @@
                 createdAt: serverTimestamp()
             };
             
-            // Esta lógica es correcta: crea un gasto y un ingreso.
             const expenseData = { ...transferData, type: 'expense', account: fromAccount, category: 'Transferencia' };
             const incomeData = { ...transferData, type: 'income', account: toAccount, category: 'Transferencia' };
             
@@ -575,14 +579,6 @@
                 console.error("Error adding transfer documents: ", e);
             }
         };
-
-        // 'saveRecurringTransaction' eliminada
-        
-        // 'saveBudget' eliminada
-
-        // 'saveAssetBuy' eliminada
-
-        // 'saveAssetSell' eliminada
 
         const addSetting = async (settingType, value, initialBalance = null) => {
             const settingsRef = doc(db, dbCollections.userSettings, userId);
@@ -675,7 +671,6 @@
             document.getElementById('accountingBook').value = transaction.accountingBook;
         };
 
-        // Renderiza la tabla de transacciones con los datos (ya filtrados y ordenados)
         const renderTransactionsTable = (transactions) => {
             const tbody = document.getElementById('transactionsTableBody');
             tbody.innerHTML = '';
@@ -716,8 +711,73 @@
                 });
             });
         };
+        
+        // *** NUEVA VARIABLE PARA EL GRÁFICO DEL HISTORIAL ***
+        let historyChart;
 
-        // Aplica filtros y ordenación a la lista global y luego renderiza
+        // *** NUEVA FUNCIÓN PARA RENDERIZAR EL GRÁFICO DEL HISTORIAL ***
+        const renderHistoryChart = (transactions) => {
+            // Destruir gráfico anterior si existe
+            if (historyChart) {
+                historyChart.destroy();
+                historyChart = null;
+            }
+
+            const type = document.getElementById('historyChartType').value;
+            
+            // Filtrar de nuevo por tipo y excluir categorías especiales
+            const filtered = transactions.filter(t => t.type === type && t.category !== 'Transferencia' && t.category !== 'Saldo Inicial');
+
+            const ctx = document.getElementById('historyChart').getContext('2d');
+
+            // Si no hay datos, mostrar mensaje
+            if (filtered.length === 0) {
+                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                 ctx.save();
+                 ctx.textAlign = 'center';
+                 ctx.textBaseline = 'middle';
+                 ctx.fillStyle = '#9CA3AF'; // text-gray-400
+                 ctx.font = '16px "Inter", sans-serif';
+                 ctx.fillText('No hay datos para esta selección', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                 ctx.restore();
+                 return;
+            }
+
+            // Agregar datos por categoría
+            const categories = filtered.reduce((acc, t) => {
+                acc[t.category] = (acc[t.category] || 0) + t.amount;
+                return acc;
+            }, {});
+
+            const data = {
+                labels: Object.keys(categories),
+                datasets: [{
+                    data: Object.values(categories),
+                    backgroundColor: [
+                        '#4c51bf', '#63b3ed', '#4fd1c5', '#f6ad55', '#e53e3e',
+                        '#d53f8c', '#a0aec0', '#9f7aea', '#38b2ac', '#ed8936'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+
+            const config = {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                        tooltip: { callbacks: { label: (item) => `${item.label}: ${item.raw.toFixed(2)} €` } }
+                    }
+                }
+            };
+            
+            historyChart = new Chart(ctx, config);
+        };
+
+
+        // *** FUNCIÓN MODIFICADA: applyFiltersAndRender AHORA TAMBIÉN LLAMA AL NUEVO GRÁFICO ***
         const applyFiltersAndRender = () => {
             const startDate = document.getElementById('filterStartDate').value;
             const endDate = document.getElementById('filterEndDate').value;
@@ -751,6 +811,8 @@
             });
             
             renderTransactionsTable(filteredTransactions);
+            // *** NUEVA LLAMADA A LA FUNCIÓN DEL GRÁFICO ***
+            renderHistoryChart(filteredTransactions);
         };
         
         document.getElementById('applyFiltersBtn').addEventListener('click', applyFiltersAndRender);
@@ -760,7 +822,9 @@
             applyFiltersAndRender();
         });
 
-        // *** NUEVA FUNCIÓN PARA EXPORTAR A CSV (EXCEL) ***
+        // *** NUEVO EVENT LISTENER PARA EL SELECTOR DE TIPO DEL GRÁFICO DEL HISTORIAL ***
+        document.getElementById('historyChartType').addEventListener('change', applyFiltersAndRender);
+
         const exportToCSV = () => {
             // 1. Obtener valores de los filtros
             const startDate = document.getElementById('filterStartDate').value;
@@ -769,7 +833,7 @@
             const account = document.getElementById('filterAccount').value;
             const sortOrder = document.getElementById('filterSort').value;
 
-            // 2. Filtrar transacciones (lógica duplicada de applyFiltersAndRender)
+            // 2. Filtrar transacciones
             let filteredTransactions = [...allUserTransactions];
             if (startDate) {
                 const start = new Date(startDate);
@@ -802,7 +866,6 @@
             filteredTransactions.forEach(t => {
                 const date = t.date ? new Date(t.date.seconds * 1000).toLocaleDateString('es-ES') : 'N/A';
                 const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
-                // Escapar comas y comillas en la descripción
                 const description = `"${t.description.replace(/"/g, '""')}"`;
                 const amount = t.amount.toFixed(2);
                 const cat = t.category || 'N/A';
@@ -818,22 +881,16 @@
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
             link.setAttribute('download', 'historial_transacciones.csv');
-            document.body.appendChild(link); // Requerido para Firefox
+            document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         };
 
-        // *** NUEVO EVENT LISTENER PARA EL BOTÓN DE EXPORTAR ***
         document.getElementById('exportExcelBtn').addEventListener('click', exportToCSV);
-
-
-        // 'renderBudgets' eliminada
-        
-        // 'renderPortfolio' eliminada
         
         const populateSelectOptions = (selectId, options, includePlaceholder = true, placeholderText = 'Seleccionar...') => {
             const selectElem = document.getElementById(selectId);
-            if (!selectElem) return; // Añadida comprobación por si el select ha sido eliminado
+            if (!selectElem) return; 
             
             selectElem.innerHTML = '';
             if (includePlaceholder) {
@@ -882,20 +939,14 @@
                 });
             });
             
-            // Populate selects in other tabs
             const categoriesForExpenses = settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial');
             populateSelectOptions('category', categoriesForExpenses);
-            populateSelectOptions('recCategory', categoriesForExpenses); // 'recCategory' ya no existe, pero no da error
-            // 'budgetCategory' eliminado
             populateSelectOptions('account', settings.accounts);
-            populateSelectOptions('recAccount', settings.accounts); // 'recAccount' ya no existe
             populateSelectOptions('transferFrom', settings.accounts);
             populateSelectOptions('transferTo', settings.accounts);
             populateSelectOptions('accountingBook', settings.accountingBooks);
-            populateSelectOptions('recAccountingBook', settings.accountingBooks); // 'recAccountingBook' ya no existe
             populateSelectOptions('transferAccountingBook', settings.accountingBooks);
             
-            // Populate filter selects
             populateSelectOptions('filterCategory', settings.categories, true, 'Todas las categorías');
             populateSelectOptions('filterAccount', settings.accounts, true, 'Todas las cuentas');
         };
@@ -904,17 +955,16 @@
         const setupRealtimeListeners = (uid) => {
             unsubscribeTransactions = onSnapshot(query(collection(db, dbCollections.transactions), where("userId", "==", uid)), (snapshot) => {
                 const transactionsFromDB = snapshot.docs;
-                // Almacena todos los datos en la variable global
                 allUserTransactions = transactionsFromDB.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Llama a la función de filtrado, que por defecto (sin filtros) mostrará todo
-                applyFiltersAndRender();
-                // Actualiza el dashboard con todos los datos sin filtrar
+                
+                // Actualiza el dashboard
                 renderDashboard(transactionsFromDB);
+
+                // Si el historial está visible, actualiza la tabla y el gráfico
+                if (!document.getElementById('transactionHistory').classList.contains('hidden')) {
+                    applyFiltersAndRender();
+                }
             });
-            
-            // 'unsubscribeBudgets' eliminado
-            
-            // 'unsubscribeAssets' eliminado
 
             unsubscribeSettings = onSnapshot(doc(db, dbCollections.userSettings, uid), (doc) => {
                 if (doc.exists()) {
@@ -932,11 +982,9 @@
 
         const cleanupRealtimeListeners = () => {
             if (unsubscribeTransactions) unsubscribeTransactions();
-            // 'unsubscribeBudgets', 'unsubscribeAssets' eliminados
             if (unsubscribeSettings) unsubscribeSettings();
         };
         
-        // Gráficos y Dashboard
         let incomeExpenseChart, categoryAnalysisChart, cashFlowChart;
         
         const renderDashboard = (transactions) => {
@@ -1005,7 +1053,6 @@
                 return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
             });
             
-            // Excluir 'Transferencia' y 'Saldo Inicial' del gráfico de Ingresos/Gastos
             const income = currentMonthTransactions
                 .filter(t => t.data().type === 'income' && t.data().category !== 'Transferencia' && t.data().category !== 'Saldo Inicial')
                 .reduce((sum, t) => sum + t.data().amount, 0);
@@ -1042,7 +1089,6 @@
             const startDateValue = document.getElementById('categoryAnalysisStartDate').value;
             const endDateValue = document.getElementById('categoryAnalysisEndDate').value;
 
-            // Excluir 'Transferencia' y 'Saldo Inicial'
             let filtered = allUserTransactions.filter(t => t.type === type && t.category !== 'Transferencia' && t.category !== 'Saldo Inicial');
             
             if (startDateValue) {
@@ -1114,7 +1160,6 @@
                 const date = t.date.toDate();
                 const key = `${date.getFullYear()}-${date.getMonth()}`;
                 if (monthlyData[key]) {
-                    // Excluir 'Transferencia' y 'Saldo Inicial'
                     if (t.type === 'income' && t.category !== 'Transferencia' && t.category !== 'Saldo Inicial') {
                         monthlyData[key].income += t.amount;
                     } else if (t.type === 'expense' && t.category !== 'Transferencia') {
@@ -1176,11 +1221,14 @@
             document.getElementById('transactionMenu').classList.remove('hidden');
         });
         
+        // *** MODIFICADO: Llama a applyFiltersAndRender para poblar el gráfico al entrar ***
         document.getElementById('viewHistoryBtn').addEventListener('click', () => {
             document.getElementById('transactionMain').classList.add('hidden');
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.add('hidden');
             document.getElementById('transactionHistory').classList.remove('hidden');
+            // Llama a la función para poblar la tabla Y el gráfico al cargar la vista
+            applyFiltersAndRender();
         });
         
         document.getElementById('backFromTransactionBtn').addEventListener('click', () => {
@@ -1188,33 +1236,35 @@
             document.getElementById('transactionMain').classList.remove('hidden');
         });
         
+        // *** SOLUCIÓN AL BUG: Llamar a hideAllTransactionForms() ***
         document.getElementById('addIncomeBtn').addEventListener('click', () => {
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms(); // <-- BUG SOLUCIONADO
             document.getElementById('incomeExpenseForm').classList.remove('hidden');
             document.getElementById('formTitle').textContent = 'Registrar Ingreso';
             document.getElementById('type').value = 'income';
             resetTransactionForm();
         });
         
+        // *** SOLUCIÓN AL BUG: Llamar a hideAllTransactionForms() ***
         document.getElementById('addExpenseBtn').addEventListener('click', () => {
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms(); // <-- BUG SOLUCIONADO
             document.getElementById('incomeExpenseForm').classList.remove('hidden');
             document.getElementById('formTitle').textContent = 'Registrar Gasto';
             document.getElementById('type').value = 'expense';
             resetTransactionForm();
         });
         
+        // *** MODIFICADO: Llamar a hideAllTransactionForms() por consistencia ***
         document.getElementById('addTransferBtn').addEventListener('click', () => {
             document.getElementById('transactionMenu').classList.add('hidden');
             document.getElementById('transactionContent').classList.remove('hidden');
+            hideAllTransactionForms(); // <-- BUG SOLUCIONADO
             document.getElementById('transferForm').classList.remove('hidden');
-            document.getElementById('incomeExpenseForm').classList.add('hidden');
-            // 'recurringForm' eliminado
         });
-        
-        // Listener de 'addRecurringBtn' eliminado
         
         document.getElementById('backFromFormBtn').addEventListener('click', () => {
             document.getElementById('transactionContent').classList.add('hidden');
@@ -1222,16 +1272,20 @@
             resetTransactionForm();
         });
         
+        // *** MODIFICADO: Destruye el gráfico del historial al salir ***
         document.getElementById('backFromHistoryBtn').addEventListener('click', () => {
             document.getElementById('transactionHistory').classList.add('hidden');
             document.getElementById('transactionMain').classList.remove('hidden');
+            
+            // Destruir el gráfico para liberar memoria
+            if (historyChart) {
+                historyChart.destroy();
+                historyChart = null;
+            }
         });
         
         document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
         document.getElementById('transferFormElem').addEventListener('submit', saveTransfer);
-        // Listener de 'recurringFormElem' eliminado
-
-        // Listeners de 'budgetForm', 'broker...' eliminados
 
         document.getElementById('categoryForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1263,7 +1317,6 @@
         });
         
         const initializeFinancesApp = () => {
-             // Set default dates for the new chart
             const today = new Date();
             const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
             const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -1285,11 +1338,9 @@
         
         const toggleBalancesSwitch = document.getElementById('toggleBalances');
         if (toggleBalancesSwitch) {
-            // Cargar el estado guardado al inicio
             const isPixelated = localStorage.getItem('pixelateBalances') === 'true';
             toggleBalancesSwitch.checked = isPixelated;
 
-            // Guardar el estado al cambiar
             toggleBalancesSwitch.addEventListener('change', () => {
                 const isChecked = toggleBalancesSwitch.checked;
                 localStorage.setItem('pixelateBalances', isChecked);
