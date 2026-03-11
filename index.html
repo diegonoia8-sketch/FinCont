@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Finanzas Personales</title>
+    <title>Gestor de Finanzas Personales con IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <!-- Marked.js para renderizar markdown en el chat -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -27,20 +29,36 @@
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: .5;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
         }
         .pixelate-text {
             filter: blur(5px);
             transition: filter 0.3s ease-in-out;
         }
+        /* Estilos para el chat flotante */
+        #chatWidget {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        #chatWidget.hidden-chat {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chat-message p { margin-bottom: 0.5rem; }
+        .chat-message p:last-child { margin-bottom: 0; }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen flex flex-col relative">
 
     <div id="authScreen" class="flex items-center justify-center min-h-screen">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm text-center">
@@ -61,7 +79,7 @@
             </div>
             <div class="flex items-center">
                 <span id="userGreeting" class="text-gray-600 text-sm hidden md:block mr-4"></span>
-                <button id="signOutBtn" class="text-gray-500 hover:text-red-500 transition duration-300 focus:outline-none">
+                <button id="signOutBtn" class="text-gray-500 hover:text-red-500 transition duration-300 focus:outline-none" title="Cerrar sesión">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V4m-2 4h4a2 2 0 012 2v2m-2-4h-4a2 2 0 00-2 2v2" />
                     </svg>
@@ -85,6 +103,22 @@
                     </div>
                     <div id="accountsSummary" class="space-y-4">
                         <p class="text-sm text-gray-500 loading-text">Cargando resumen de cuentas...</p>
+                    </div>
+                    
+                    <div id="pastBalanceContainer" class="mt-6 border-t pt-4">
+                        <h3 class="text-md font-semibold text-gray-700 mb-2">Consultar Saldos Anteriores</h3>
+                        <div class="flex flex-col sm:flex-row gap-2 items-end">
+                            <div class="flex-grow w-full">
+                                <label for="pastBalanceDate" class="block text-sm font-medium text-gray-700">Fecha</label>
+                                <input type="date" id="pastBalanceDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            </div>
+                            <button id="calculatePastBalanceBtn" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                                Consultar
+                            </button>
+                            <button id="resetBalanceBtn" class="hidden w-full sm:w-auto bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-700 transition duration-300">
+                                Ver Saldos Actuales
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -162,37 +196,51 @@
                     </button>
 
                     <div id="incomeExpenseForm" class="bg-white p-6 rounded-lg shadow-sm hidden">
-                        <h3 id="formTitle" class="text-lg font-semibold text-gray-800 mb-4"></h3>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 id="formTitle" class="text-lg font-semibold text-gray-800"></h3>
+                            <!-- BOTÓN DE ESCANEAR TICKET IA -->
+                            <div>
+                                <input type="file" id="receiptInput" accept="image/*" capture="environment" class="hidden">
+                                <button type="button" id="scanReceiptBtn" class="flex items-center bg-purple-600 text-white text-sm font-semibold py-2 px-4 rounded shadow-md hover:bg-purple-700 transition duration-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span id="scanReceiptText">Escanear Ticket (IA)</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <form id="transactionForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <input type="hidden" id="type" name="type" value="">
                             <input type="hidden" id="transactionId" name="transactionId" value="">
                             <div>
                                 <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
-                                <input type="text" id="description" name="description" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <input type="text" id="description" name="description" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                             </div>
                             <div>
                                 <label for="amount" class="block text-sm font-medium text-gray-700">Cantidad (€)</label>
-                                <input type="number" id="amount" name="amount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <input type="number" id="amount" name="amount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                             </div>
                             <div>
                                 <label for="category" class="block text-sm font-medium text-gray-700">Categoría</label>
-                                <select id="category" name="category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <select id="category" name="category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                     <option value="">Seleccionar...</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="date" class="block text-sm font-medium text-gray-700">Fecha</label>
-                                <input type="date" id="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <input type="date" id="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                             </div>
                             <div>
                                 <label for="account" class="block text-sm font-medium text-gray-700">Cuenta</label>
-                                <select id="account" name="account" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <select id="account" name="account" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                     <option value="">Seleccionar...</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="accountingBook" class="block text-sm font-medium text-gray-700">Contabilidad</label>
-                                <select id="accountingBook" name="accountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <select id="accountingBook" name="accountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                     <option value="">Seleccionar...</option>
                                 </select>
                             </div>
@@ -209,27 +257,27 @@
                         <form id="transferFormElem" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label for="transferFrom" class="block text-sm font-medium text-gray-700">Cuenta de Origen</label>
-                                <select id="transferFrom" name="transferFrom" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <select id="transferFrom" name="transferFrom" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                     <option value="">Seleccionar...</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="transferTo" class="block text-sm font-medium text-gray-700">Cuenta de Destino</label>
-                                <select id="transferTo" name="transferTo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <select id="transferTo" name="transferTo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                     <option value="">Seleccionar...</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="transferAmount" class="block text-sm font-medium text-gray-700">Cantidad (€)</label>
-                                <input type="number" id="transferAmount" name="transferAmount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <input type="number" id="transferAmount" name="transferAmount" required step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                             </div>
                             <div>
                                 <label for="transferDate" class="block text-sm font-medium text-gray-700">Fecha</label>
-                                <input type="date" id="transferDate" name="transferDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <input type="date" id="transferDate" name="transferDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                             </div>
                             <div>
                                 <label for="transferAccountingBook" class="block text-sm font-medium text-gray-700">Contabilidad</label>
-                                <select id="transferAccountingBook" name="transferAccountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <select id="transferAccountingBook" name="transferAccountingBook" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                     <option value="">Seleccionar...</option>
                                 </select>
                             </div>
@@ -252,27 +300,27 @@
                     <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 p-4 border rounded-lg bg-gray-50 items-end">
                         <div>
                             <label for="filterStartDate" class="block text-sm font-medium text-gray-700">Fecha Inicio</label>
-                            <input type="date" id="filterStartDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            <input type="date" id="filterStartDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                         </div>
                         <div>
                             <label for="filterEndDate" class="block text-sm font-medium text-gray-700">Fecha Fin</label>
-                            <input type="date" id="filterEndDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            <input type="date" id="filterEndDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                         </div>
                         <div>
                             <label for="filterCategory" class="block text-sm font-medium text-gray-700">Categoría</label>
-                            <select id="filterCategory" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            <select id="filterCategory" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                 <option value="">Todas</option>
                             </select>
                         </div>
                         <div>
                             <label for="filterAccount" class="block text-sm font-medium text-gray-700">Cuenta</label>
-                            <select id="filterAccount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            <select id="filterAccount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                 <option value="">Todas</option>
                             </select>
                         </div>
                         <div>
                             <label for="filterSort" class="block text-sm font-medium text-gray-700">Ordenar por</label>
-                            <select id="filterSort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                            <select id="filterSort" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border">
                                 <option value="desc">Más recientes primero</option>
                                 <option value="asc">Más antiguas primero</option>
                             </select>
@@ -285,7 +333,7 @@
                                 Limpiar
                             </button>
                             <button type="button" id="exportExcelBtn" class="flex-1 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300">
-                                Exportar a Excel
+                                Exportar CSV
                             </button>
                         </div>
                     </form>
@@ -294,7 +342,7 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Análisis de Categorías (Filtrado)</h3>
                         <div class="mb-4 w-full md:w-1/4">
                             <label for="historyChartType" class="block text-sm font-medium text-gray-700">Tipo</label>
-                            <select id="historyChartType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                            <select id="historyChartType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                                 <option value="expense">Gastos</option>
                                 <option value="income">Ingresos</option>
                             </select>
@@ -328,41 +376,57 @@
             
             <div id="settings" class="tab-content hidden">
                 <div class="bg-white p-6 rounded-lg shadow-sm mb-6">
-                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestionar Atributos</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Gestionar Atributos y Sistema</h2>
+                    
+                    <!-- CONFIGURACIÓN API KEY IA -->
+                    <div class="mb-8 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <h3 class="font-semibold text-purple-800 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                            Configuración de IA (Google Gemini)
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-3">Para usar el escaner de tickets y el chatbot, necesitas una API Key gratuita de <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-600 underline">Google AI Studio</a>.</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="password" id="geminiApiKey" class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Pega tu API Key de Gemini aquí">
+                            <button id="saveApiKeyBtn" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-purple-700 transition duration-300">
+                                Guardar Clave
+                            </button>
+                        </div>
+                        <p id="apiKeyStatus" class="text-xs mt-2 text-green-600 hidden">¡Clave guardada en tu navegador!</p>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
                             <h3 class="font-semibold text-gray-800 mb-2">Categorías</h3>
                             <form id="categoryForm" class="flex flex-col sm:flex-row gap-2 mb-4">
-                                <input type="text" id="newCategory" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Nueva Categoría">
+                                <input type="text" id="newCategory" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nueva Categoría">
                                 <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
                                     Añadir
                                 </button>
                             </form>
-                            <div class="flex flex-wrap gap-2" id="categoryList">
-                            </div>
+                            <div class="flex flex-wrap gap-2" id="categoryList"></div>
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-800 mb-2">Cuentas</h3>
                             <form id="accountForm" class="flex flex-col sm:flex-row gap-2 mb-4">
-                                <input type="text" id="newAccount" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Nombre de la Cuenta">
-                                <input type="number" id="initialBalance" step="0.01" value="0" class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Saldo Inicial">
+                                <input type="text" id="newAccount" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nombre de la Cuenta">
+                                <input type="number" id="initialBalance" step="0.01" value="0" class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Saldo Inicial">
                                 <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
                                     Añadir
                                 </button>
                             </form>
-                            <div class="flex flex-wrap gap-2" id="accountList">
-                            </div>
+                            <div class="flex flex-wrap gap-2" id="accountList"></div>
                         </div>
                         <div>
                             <h3 class="font-semibold text-gray-800 mb-2">Contabilidades</h3>
                             <form id="accountingForm" class="flex flex-col sm:flex-row gap-2 mb-4">
-                                <input type="text" id="newAccountingBook" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" placeholder="Nueva Contabilidad">
+                                <input type="text" id="newAccountingBook" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nueva Contabilidad">
                                 <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
                                     Añadir
                                 </button>
                             </form>
-                            <div class="flex flex-wrap gap-2" id="accountingList">
-                                </div>
+                            <div class="flex flex-wrap gap-2" id="accountingList"></div>
                         </div>
                     </div>
                 </div>
@@ -370,25 +434,53 @@
 
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden">
+        <!-- CHATBOT FLOTANTE -->
+        <div id="openChatBtn" class="fixed bottom-20 md:bottom-6 right-6 bg-purple-600 text-white p-4 rounded-full shadow-lg cursor-pointer hover:bg-purple-700 transition duration-300 z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+        </div>
+
+        <div id="chatWidget" class="hidden-chat fixed bottom-20 md:bottom-24 right-4 md:right-6 w-80 md:w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 flex flex-col" style="height: 500px; max-height: 70vh;">
+            <div class="bg-purple-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="font-bold">Asistente Financiero IA</h3>
+                <button id="closeChatBtn" class="text-white hover:text-gray-200 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="chatMessages" class="flex-grow p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3 text-sm">
+                <div class="bg-white border border-gray-200 p-3 rounded-lg self-start max-w-[85%] shadow-sm">
+                    Hola 👋, soy tu asistente financiero. Puedo analizar tus transacciones y responder dudas sobre tus gastos, ingresos y ahorros. ¿En qué te ayudo?
+                </div>
+            </div>
+            <div class="p-3 border-t border-gray-200 bg-white rounded-b-lg">
+                <form id="chatForm" class="flex gap-2">
+                    <input type="text" id="chatInput" class="flex-grow p-2 border border-gray-300 rounded focus:outline-none focus:border-purple-500" placeholder="Pregunta sobre tus gastos..." autocomplete="off">
+                    <button type="submit" class="bg-purple-600 text-white p-2 rounded hover:bg-purple-700 transition flex items-center justify-center min-w-[40px]">
+                        <svg id="chatSendIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                        </svg>
+                        <div id="chatLoadingIcon" class="spinner hidden"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- FIN CHATBOT -->
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden z-40">
             <div class="flex justify-around items-center h-16">
                 <button id="dashboardBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600 active" data-tab="dashboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     <span class="text-xs mt-1">Inicio</span>
                 </button>
                 <button id="transactionsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="transactions">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/></svg>
                     <span class="text-xs mt-1">Transacciones</span>
                 </button>
                 <button id="settingsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826 3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span class="text-xs mt-1">Configuración</span>
                 </button>
             </div>
@@ -397,22 +489,15 @@
         <nav class="hidden md:flex justify-center bg-white shadow-sm py-2 px-6">
             <div class="flex space-x-4">
                 <button id="dashboardBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600 active" data-tab="dashboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     <span>Inicio</span>
                 </button>
                 <button id="transactionsBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="transactions">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/></svg>
                     <span>Transacciones</span>
                 </button>
                 <button id="settingsBtnDesktop" class="tab-button flex items-center p-2 text-gray-500 hover:text-indigo-600" data-tab="settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826 3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span>Configuración</span>
                 </button>
             </div>
@@ -434,7 +519,6 @@
             measurementId: "G-582WDX4234"
         };
 
-        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -450,7 +534,6 @@
         let userId = null;
         let unsubscribeTransactions;
         let unsubscribeSettings;
-
         let allUserTransactions = [];
         
         const showAuthScreen = () => {
@@ -494,10 +577,7 @@
             });
         });
         
-        const dbCollections = {
-            transactions: "transactions",
-            userSettings: "userSettings"
-        };
+        const dbCollections = { transactions: "transactions", userSettings: "userSettings" };
         
         const hideAllTransactionForms = () => {
             document.getElementById('incomeExpenseForm').classList.add('hidden');
@@ -579,6 +659,170 @@
                 console.error("Error adding transfer documents: ", e);
             }
         };
+
+        /* --------------- SECCIÓN IA (GEMINI) --------------- */
+        
+        // Manejo de la API Key en Settings
+        const apiKeyInput = document.getElementById('geminiApiKey');
+        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+        
+        // Cargar key guardada al inicio
+        const savedKey = localStorage.getItem('geminiApiKey');
+        if(savedKey) apiKeyInput.value = savedKey;
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if(key) {
+                localStorage.setItem('geminiApiKey', key);
+                document.getElementById('apiKeyStatus').classList.remove('hidden');
+                setTimeout(() => document.getElementById('apiKeyStatus').classList.add('hidden'), 3000);
+            }
+        });
+
+        // Función base para llamar a Gemini
+        async function callGemini(systemPrompt, userPrompt, base64Image = null) {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if (!apiKey) throw new Error("Falta la API Key de Gemini. Configúrala en la pestaña de Configuración.");
+
+            const parts = [{ text: `${systemPrompt}\n\nUser: ${userPrompt}` }];
+            
+            if (base64Image) {
+                // Separar mimeType de la data
+                const mimeType = base64Image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)[1];
+                const data = base64Image.split(',')[1];
+                parts.push({
+                    inline_data: { mime_type: mimeType, data: data }
+                });
+            }
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: parts }]
+                })
+            });
+
+            if(!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Error al conectar con la IA");
+            }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        // 1. ESCÁNER DE TICKETS
+        const receiptInput = document.getElementById('receiptInput');
+        const scanReceiptBtn = document.getElementById('scanReceiptBtn');
+        const scanReceiptText = document.getElementById('scanReceiptText');
+
+        scanReceiptBtn.addEventListener('click', () => receiptInput.click());
+
+        receiptInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64Image = reader.result;
+                scanReceiptBtn.classList.add('opacity-50', 'cursor-wait');
+                scanReceiptText.textContent = "Analizando...";
+                
+                try {
+                    const prompt = `Analiza este ticket de compra. Extrae el nombre del comercio (como una descripción breve), el total gastado (un número), y la fecha de compra en formato YYYY-MM-DD. 
+                    Devuelve EXCLUSIVAMENTE un objeto JSON válido con esta estructura: {"description": "Nombre", "amount": 10.50, "date": "YYYY-MM-DD"}. No incluyas markdown ni texto adicional.`;
+                    
+                    let result = await callGemini("Eres un bot extractor de recibos. Responde solo con JSON.", prompt, base64Image);
+                    
+                    // Limpiar markdown si la IA lo añade
+                    result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const jsonResult = JSON.parse(result);
+
+                    // Autorellenar formulario
+                    if(jsonResult.description) document.getElementById('description').value = jsonResult.description;
+                    if(jsonResult.amount) document.getElementById('amount').value = jsonResult.amount;
+                    if(jsonResult.date) document.getElementById('date').value = jsonResult.date;
+                    
+                    alert("¡Ticket escaneado correctamente!");
+                } catch (error) {
+                    console.error(error);
+                    alert("Error al leer el ticket: " + error.message);
+                } finally {
+                    scanReceiptBtn.classList.remove('opacity-50', 'cursor-wait');
+                    scanReceiptText.textContent = "Escanear Ticket (IA)";
+                    receiptInput.value = ''; // Reset
+                }
+            };
+        });
+
+        // 2. CHATBOT FINANCIERO
+        const openChatBtn = document.getElementById('openChatBtn');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const chatWidget = document.getElementById('chatWidget');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatSendIcon = document.getElementById('chatSendIcon');
+        const chatLoadingIcon = document.getElementById('chatLoadingIcon');
+
+        let chatHistory = [];
+
+        openChatBtn.addEventListener('click', () => chatWidget.classList.remove('hidden-chat'));
+        closeChatBtn.addEventListener('click', () => chatWidget.classList.add('hidden-chat'));
+
+        const addMessageToChat = (text, isUser = false) => {
+            const div = document.createElement('div');
+            div.className = `p-3 rounded-lg text-sm max-w-[85%] shadow-sm ${isUser ? 'bg-purple-600 text-white self-end' : 'bg-white border border-gray-200 text-gray-800 self-start chat-message'}`;
+            if(isUser) {
+                div.textContent = text;
+            } else {
+                div.innerHTML = marked.parse(text); // Usar marked para que el texto de la IA se vea bien (negritas, listas)
+            }
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if(!text) return;
+
+            addMessageToChat(text, true);
+            chatInput.value = '';
+            
+            chatSendIcon.classList.add('hidden');
+            chatLoadingIcon.classList.remove('hidden');
+
+            // Preparar datos para que la IA entienda las finanzas
+            // Resumimos para no enviar demasiados tokens y saturar la API
+            const minimalTx = allUserTransactions.map(t => ({
+                d: new Date(t.date.seconds*1000).toISOString().split('T')[0],
+                t: t.type === 'income' ? '+' : '-',
+                a: t.amount,
+                c: t.category,
+                desc: t.description
+            }));
+
+            const systemPrompt = `Eres el asistente financiero personal del usuario. Tienes acceso a sus transacciones. 
+            Responde a sus preguntas basándote en estos datos: ${JSON.stringify(minimalTx)}. 
+            Historial de charla: ${JSON.stringify(chatHistory.slice(-4))}.
+            Sé conciso, amigable y da cifras exactas si se te piden. Responde usando formato Markdown (negritas, listas).`;
+
+            try {
+                const response = await callGemini(systemPrompt, text);
+                addMessageToChat(response, false);
+                chatHistory.push({ user: text, ai: response });
+            } catch (error) {
+                addMessageToChat(`Error: ${error.message}`, false);
+            } finally {
+                chatSendIcon.classList.remove('hidden');
+                chatLoadingIcon.classList.add('hidden');
+            }
+        });
+
+        /* --------------- FIN SECCIÓN IA --------------- */
 
         const addSetting = async (settingType, value, initialBalance = null) => {
             const settingsRef = doc(db, dbCollections.userSettings, userId);
@@ -675,7 +919,7 @@
             const tbody = document.getElementById('transactionsTableBody');
             tbody.innerHTML = '';
             if (transactions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay transacciones que coincidan con los filtros.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No hay transacciones.</td></tr>';
                 return;
             }
             transactions.forEach(data => {
@@ -690,94 +934,47 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm">${data.account}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">${data.accountingBook || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="edit-btn text-indigo-600 hover:text-indigo-900 transition duration-300 mr-2" data-id="${data.id}">
-                            Editar
-                        </button>
-                        <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300" data-id="${data.id}" data-collection="${dbCollections.transactions}">
-                            Eliminar
-                        </button>
+                        <button class="edit-btn text-indigo-600 hover:text-indigo-900 transition duration-300 mr-2" data-id="${data.id}">Editar</button>
+                        <button class="delete-btn text-red-600 hover:text-red-900 transition duration-300" data-id="${data.id}" data-collection="${dbCollections.transactions}">Eliminar</button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
-            document.querySelectorAll('.delete-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    deleteDocument(e.target.dataset.collection, e.target.dataset.id);
-                });
-            });
-            document.querySelectorAll('.edit-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    editTransaction(e.target.dataset.id);
-                });
-            });
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => deleteDocument(e.target.dataset.collection, e.target.dataset.id)));
+            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => editTransaction(e.target.dataset.id)));
         };
         
-        // *** NUEVA VARIABLE PARA EL GRÁFICO DEL HISTORIAL ***
         let historyChart;
 
-        // *** NUEVA FUNCIÓN PARA RENDERIZAR EL GRÁFICO DEL HISTORIAL ***
         const renderHistoryChart = (transactions) => {
-            // Destruir gráfico anterior si existe
-            if (historyChart) {
-                historyChart.destroy();
-                historyChart = null;
-            }
-
+            if (historyChart) { historyChart.destroy(); historyChart = null; }
             const type = document.getElementById('historyChartType').value;
-            
-            // Filtrar de nuevo por tipo y excluir categorías especiales
-            const filtered = transactions.filter(t => t.type === type && t.category !== 'Transferencia' && t.category !== 'Saldo Inicial');
-
+            const filtered = transactions.filter(t => t.type === type && !['Transferencia', 'Saldo Inicial', 'No Contabilizados'].includes(t.category));
             const ctx = document.getElementById('historyChart').getContext('2d');
 
-            // Si no hay datos, mostrar mensaje
             if (filtered.length === 0) {
                  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                 ctx.save();
-                 ctx.textAlign = 'center';
-                 ctx.textBaseline = 'middle';
-                 ctx.fillStyle = '#9CA3AF'; // text-gray-400
-                 ctx.font = '16px "Inter", sans-serif';
-                 ctx.fillText('No hay datos para esta selección', ctx.canvas.width / 2, ctx.canvas.height / 2);
-                 ctx.restore();
-                 return;
+                 ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#9CA3AF'; ctx.font = '16px "Inter", sans-serif';
+                 ctx.fillText('No hay datos', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                 ctx.restore(); return;
             }
 
-            // Agregar datos por categoría
-            const categories = filtered.reduce((acc, t) => {
-                acc[t.category] = (acc[t.category] || 0) + t.amount;
-                return acc;
-            }, {});
-
-            const data = {
-                labels: Object.keys(categories),
-                datasets: [{
-                    data: Object.values(categories),
-                    backgroundColor: [
-                        '#4c51bf', '#63b3ed', '#4fd1c5', '#f6ad55', '#e53e3e',
-                        '#d53f8c', '#a0aec0', '#9f7aea', '#38b2ac', '#ed8936'
-                    ],
-                    hoverOffset: 4
-                }]
-            };
-
+            const categories = filtered.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
             const config = {
                 type: 'doughnut',
-                data: data,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'right' },
-                        tooltip: { callbacks: { label: (item) => `${item.label}: ${item.raw.toFixed(2)} €` } }
-                    }
-                }
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: ['#4c51bf', '#63b3ed', '#4fd1c5', '#f6ad55', '#e53e3e', '#d53f8c', '#a0aec0', '#9f7aea', '#38b2ac', '#ed8936'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (i) => `${i.label}: ${i.raw.toFixed(2)} €` } } } }
             };
-            
             historyChart = new Chart(ctx, config);
         };
 
-
-        // *** FUNCIÓN MODIFICADA: applyFiltersAndRender AHORA TAMBIÉN LLAMA AL NUEVO GRÁFICO ***
         const applyFiltersAndRender = () => {
             const startDate = document.getElementById('filterStartDate').value;
             const endDate = document.getElementById('filterEndDate').value;
@@ -785,206 +982,91 @@
             const account = document.getElementById('filterAccount').value;
             const sortOrder = document.getElementById('filterSort').value;
 
-            let filteredTransactions = [...allUserTransactions];
-            
-            if (startDate) {
-                const start = new Date(startDate);
-                start.setHours(0, 0, 0, 0);
-                filteredTransactions = filteredTransactions.filter(t => t.date.toDate() >= start);
-            }
-            if (endDate) {
-                const end = new Date(endDate);
-                end.setHours(23, 59, 59, 999);
-                filteredTransactions = filteredTransactions.filter(t => t.date.toDate() <= end);
-            }
-            if (category) {
-                filteredTransactions = filteredTransactions.filter(t => t.category === category);
-            }
-            if (account) {
-                filteredTransactions = filteredTransactions.filter(t => t.account === account);
-            }
+            let filtered = [...allUserTransactions];
+            if (startDate) { const start = new Date(startDate); start.setHours(0,0,0,0); filtered = filtered.filter(t => t.date.toDate() >= start); }
+            if (endDate) { const end = new Date(endDate); end.setHours(23,59,59,999); filtered = filtered.filter(t => t.date.toDate() <= end); }
+            if (category) filtered = filtered.filter(t => t.category === category);
+            if (account) filtered = filtered.filter(t => t.account === account);
 
-            filteredTransactions.sort((a, b) => {
-                const dateA = a.date.seconds;
-                const dateB = b.date.seconds;
-                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-            });
-            
-            renderTransactionsTable(filteredTransactions);
-            // *** NUEVA LLAMADA A LA FUNCIÓN DEL GRÁFICO ***
-            renderHistoryChart(filteredTransactions);
+            filtered.sort((a, b) => sortOrder === 'desc' ? b.date.seconds - a.date.seconds : a.date.seconds - b.date.seconds);
+            renderTransactionsTable(filtered);
+            renderHistoryChart(filtered);
         };
         
         document.getElementById('applyFiltersBtn').addEventListener('click', applyFiltersAndRender);
-        
-        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
-            document.getElementById('filterForm').reset();
-            applyFiltersAndRender();
-        });
-
-        // *** NUEVO EVENT LISTENER PARA EL SELECTOR DE TIPO DEL GRÁFICO DEL HISTORIAL ***
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => { document.getElementById('filterForm').reset(); applyFiltersAndRender(); });
         document.getElementById('historyChartType').addEventListener('change', applyFiltersAndRender);
 
         const exportToCSV = () => {
-            // 1. Obtener valores de los filtros
-            const startDate = document.getElementById('filterStartDate').value;
-            const endDate = document.getElementById('filterEndDate').value;
-            const category = document.getElementById('filterCategory').value;
-            const account = document.getElementById('filterAccount').value;
-            const sortOrder = document.getElementById('filterSort').value;
-
-            // 2. Filtrar transacciones
-            let filteredTransactions = [...allUserTransactions];
-            if (startDate) {
-                const start = new Date(startDate);
-                start.setHours(0, 0, 0, 0);
-                filteredTransactions = filteredTransactions.filter(t => t.date.toDate() >= start);
-            }
-            if (endDate) {
-                const end = new Date(endDate);
-                end.setHours(23, 59, 59, 999);
-                filteredTransactions = filteredTransactions.filter(t => t.date.toDate() <= end);
-            }
-            if (category) {
-                filteredTransactions = filteredTransactions.filter(t => t.category === category);
-            }
-            if (account) {
-                filteredTransactions = filteredTransactions.filter(t => t.account === account);
-            }
-
-            // 3. Ordenar transacciones
-            filteredTransactions.sort((a, b) => {
-                const dateA = a.date.seconds;
-                const dateB = b.date.seconds;
-                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-            });
-
-            // 4. Construir el contenido CSV
             const headers = ['Fecha', 'Tipo', 'Descripción', 'Cantidad (€)', 'Categoría', 'Cuenta', 'Contabilidad'];
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
-
-            filteredTransactions.forEach(t => {
+            allUserTransactions.forEach(t => {
                 const date = t.date ? new Date(t.date.seconds * 1000).toLocaleDateString('es-ES') : 'N/A';
-                const type = t.type === 'income' ? 'Ingreso' : 'Gasto';
-                const description = `"${t.description.replace(/"/g, '""')}"`;
-                const amount = t.amount.toFixed(2);
-                const cat = t.category || 'N/A';
-                const acc = t.account || 'N/A';
-                const acctBook = t.accountingBook || 'N/A';
-
-                const row = [date, type, description, amount, cat, acc, acctBook].join(',');
+                const row = [date, t.type === 'income' ? 'Ingreso' : 'Gasto', `"${t.description.replace(/"/g, '""')}"`, t.amount.toFixed(2), t.category||'N/A', t.account||'N/A', t.accountingBook||'N/A'].join(',');
                 csvContent += row + '\n';
             });
-
-            // 5. Crear y disparar la descarga
-            const encodedUri = encodeURI(csvContent);
             const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'historial_transacciones.csv');
+            link.href = encodeURI(csvContent);
+            link.download = 'historial_transacciones.csv';
             document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.click(); document.body.removeChild(link);
         };
-
         document.getElementById('exportExcelBtn').addEventListener('click', exportToCSV);
         
         const populateSelectOptions = (selectId, options, includePlaceholder = true, placeholderText = 'Seleccionar...') => {
             const selectElem = document.getElementById(selectId);
             if (!selectElem) return; 
-            
             selectElem.innerHTML = '';
-            if (includePlaceholder) {
-                const placeholder = document.createElement('option');
-                placeholder.value = '';
-                placeholder.textContent = placeholderText;
-                selectElem.appendChild(placeholder);
-            }
-            options.forEach(optionText => {
-                const option = document.createElement('option');
-                option.value = optionText;
-                option.textContent = optionText;
-                selectElem.appendChild(option);
-            });
+            if (includePlaceholder) selectElem.appendChild(new Option(placeholderText, ''));
+            options.forEach(opt => selectElem.appendChild(new Option(opt, opt)));
         };
 
         const renderSettings = (settings) => {
-            const categoryList = document.getElementById('categoryList');
-            const accountList = document.getElementById('accountList');
-            const accountingList = document.getElementById('accountingList');
-
-            const renderList = (listElement, items, settingType) => {
-                listElement.innerHTML = '';
+            const renderList = (elementId, items, type) => {
+                const list = document.getElementById(elementId);
+                list.innerHTML = '';
                 items.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'flex items-center space-x-2 bg-gray-200 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full';
-                    div.innerHTML = `
-                        <span>${item}</span>
-                        <button class="delete-setting-btn text-red-500 hover:text-red-700" data-setting-type="${settingType}" data-value="${item}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    `;
-                    listElement.appendChild(div);
+                    div.innerHTML = `<span>${item}</span><button class="delete-setting-btn text-red-500 hover:text-red-700" data-type="${type}" data-value="${item}"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>`;
+                    list.appendChild(div);
                 });
             };
-            
-            renderList(categoryList, settings.categories, 'categories');
-            renderList(accountList, settings.accounts, 'accounts');
-            renderList(accountingList, settings.accountingBooks, 'accountingBooks');
+            renderList('categoryList', settings.categories, 'categories');
+            renderList('accountList', settings.accounts, 'accounts');
+            renderList('accountingList', settings.accountingBooks, 'accountingBooks');
 
-            document.querySelectorAll('.delete-setting-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    deleteSetting(e.currentTarget.dataset.settingType, e.currentTarget.dataset.value);
-                });
-            });
+            document.querySelectorAll('.delete-setting-btn').forEach(btn => btn.addEventListener('click', (e) => deleteSetting(e.currentTarget.dataset.type, e.currentTarget.dataset.value)));
             
-            const categoriesForExpenses = settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial');
-            populateSelectOptions('category', categoriesForExpenses);
+            const catsForExp = settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial');
+            populateSelectOptions('category', catsForExp);
             populateSelectOptions('account', settings.accounts);
             populateSelectOptions('transferFrom', settings.accounts);
             populateSelectOptions('transferTo', settings.accounts);
             populateSelectOptions('accountingBook', settings.accountingBooks);
             populateSelectOptions('transferAccountingBook', settings.accountingBooks);
-            
             populateSelectOptions('filterCategory', settings.categories, true, 'Todas las categorías');
             populateSelectOptions('filterAccount', settings.accounts, true, 'Todas las cuentas');
         };
 
-
         const setupRealtimeListeners = (uid) => {
             unsubscribeTransactions = onSnapshot(query(collection(db, dbCollections.transactions), where("userId", "==", uid)), (snapshot) => {
-                const transactionsFromDB = snapshot.docs;
-                allUserTransactions = transactionsFromDB.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Actualiza el dashboard
-                renderDashboard(transactionsFromDB);
-
-                // Si el historial está visible, actualiza la tabla y el gráfico
-                if (!document.getElementById('transactionHistory').classList.contains('hidden')) {
-                    applyFiltersAndRender();
-                }
+                allUserTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderDashboard(snapshot.docs);
+                if (!document.getElementById('transactionHistory').classList.contains('hidden')) applyFiltersAndRender();
             });
 
             unsubscribeSettings = onSnapshot(doc(db, dbCollections.userSettings, uid), (doc) => {
-                if (doc.exists()) {
-                    renderSettings(doc.data());
-                } else {
-                    const defaultSettings = {
-                        categories: ["Salario", "Inversiones", "Regalo", "Otros Ingresos", "Alquiler", "Comida", "Transporte", "Ocio", "Facturas", "Salud", "Educación", "Ropa", "Otros Gastos", "Transferencia", "Saldo Inicial"],
-                        accounts: ["Efectivo", "Cuenta Bancaria", "Tarjeta de Crédito"],
-                        accountingBooks: ["Principal"]
-                    };
-                    setDoc(doc(db, dbCollections.userSettings, uid), defaultSettings);
-                }
+                if (doc.exists()) renderSettings(doc.data());
+                else setDoc(doc.ref, {
+                    categories: ["Salario", "Inversiones", "Regalo", "Otros Ingresos", "Alquiler", "Comida", "Transporte", "Ocio", "Facturas", "Salud", "Educación", "Ropa", "Otros Gastos", "Transferencia", "Saldo Inicial", "No Contabilizados"],
+                    accounts: ["Efectivo", "Cuenta Bancaria", "Tarjeta de Crédito"],
+                    accountingBooks: ["Principal"]
+                });
             });
         };
 
-        const cleanupRealtimeListeners = () => {
-            if (unsubscribeTransactions) unsubscribeTransactions();
-            if (unsubscribeSettings) unsubscribeSettings();
-        };
-        
+        const cleanupRealtimeListeners = () => { if (unsubscribeTransactions) unsubscribeTransactions(); if (unsubscribeSettings) unsubscribeSettings(); };
         let incomeExpenseChart, categoryAnalysisChart, cashFlowChart;
         
         const renderDashboard = (transactions) => {
@@ -995,361 +1077,147 @@
         };
 
         const toggleBalancesVisibility = (shouldPixelate) => {
-            const balanceElements = document.querySelectorAll('.balance-value');
-            balanceElements.forEach(element => {
-                if (shouldPixelate) {
-                    element.classList.add('pixelate-text');
-                } else {
-                    element.classList.remove('pixelate-text');
-                }
-            });
+            document.querySelectorAll('.balance-value').forEach(el => shouldPixelate ? el.classList.add('pixelate-text') : el.classList.remove('pixelate-text'));
         };
 
         const renderAccountsSummary = (transactions) => {
-            const summaryDiv = document.getElementById('accountsSummary');
             const accounts = {};
-
             transactions.forEach(doc => {
-                const data = doc.data();
+                const data = doc.data(); 
                 if (!accounts[data.account]) accounts[data.account] = 0;
-
-                if (data.type === 'income') {
-                    accounts[data.account] += data.amount;
-                } else if (data.type === 'expense') {
-                    accounts[data.account] -= data.amount;
-                }
+                if (data.type === 'income') accounts[data.account] += data.amount;
+                else if (data.type === 'expense') accounts[data.account] -= data.amount;
             });
-            
-            let html = '';
-            let totalBalance = 0;
-
+            let html = '', totalBalance = 0;
             for (const account in accounts) {
                 totalBalance += accounts[account];
-                html += `
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-gray-700">${account}</span>
-                        <span class="balance-value text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span>
-                    </div>
-                `;
+                html += `<div class="flex justify-between items-center"><span class="text-sm font-medium text-gray-700">${account}</span><span class="balance-value text-sm font-bold ${accounts[account] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[account].toFixed(2)} €</span></div>`;
             }
+            html += `<div class="flex items-center justify-between mt-4 border-t pt-4"><span class="text-base font-semibold text-gray-800">Saldo Total:</span><span id="totalBalance" class="balance-value text-xl font-bold text-indigo-600">${totalBalance.toFixed(2)} €</span></div>`;
+            document.getElementById('accountsSummary').innerHTML = html;
+            toggleBalancesVisibility(document.getElementById('toggleBalances').checked);
+        };
 
-            html += `
-                <div class="flex items-center justify-between mt-4 border-t pt-4">
-                    <span class="text-base font-semibold text-gray-800">Saldo Total:</span>
-                    <span id="totalBalance" class="balance-value text-xl font-bold text-indigo-600">${totalBalance.toFixed(2)} €</span>
-                </div>
-            `;
-            
-            summaryDiv.innerHTML = html;
-            const isPixelated = document.getElementById('toggleBalances').checked;
-            toggleBalancesVisibility(isPixelated);
+        const showPastBalances = () => {
+            const dateInput = document.getElementById('pastBalanceDate').value;
+            if (!dateInput) return alert("Seleccione una fecha.");
+            const targetDate = new Date(dateInput); targetDate.setHours(23, 59, 59, 999); 
+            const accounts = {};
+            allUserTransactions.filter(t => t.date.toDate() <= targetDate && t.category !== 'No Contabilizados').forEach(data => {
+                if (!accounts[data.account]) accounts[data.account] = 0;
+                data.type === 'income' ? accounts[data.account] += data.amount : accounts[data.account] -= data.amount;
+            });
+            let html = `<h4 class="text-md font-bold text-gray-800 mb-2">Saldos al ${targetDate.toLocaleDateString('es-ES')}</h4>`, total = 0;
+            for (const acc in accounts) { total += accounts[acc]; html += `<div class="flex justify-between items-center"><span class="text-sm font-medium text-gray-700">${acc}</span><span class="balance-value text-sm font-bold ${accounts[acc] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[acc].toFixed(2)} €</span></div>`; }
+            html += `<div class="flex items-center justify-between mt-4 border-t pt-4"><span class="text-base font-semibold text-gray-800">Saldo Total:</span><span class="balance-value text-xl font-bold text-indigo-600">${total.toFixed(2)} €</span></div>`;
+            document.getElementById('accountsSummary').innerHTML = html;
+            toggleBalancesVisibility(document.getElementById('toggleBalances').checked);
+            document.getElementById('calculatePastBalanceBtn').classList.add('hidden');
+            document.getElementById('pastBalanceDate').parentElement.classList.add('hidden'); 
+            document.getElementById('resetBalanceBtn').classList.remove('hidden');
+        };
+        
+        const resetBalances = () => {
+            document.getElementById('calculatePastBalanceBtn').classList.remove('hidden');
+            document.getElementById('pastBalanceDate').parentElement.classList.remove('hidden'); 
+            document.getElementById('resetBalanceBtn').classList.add('hidden');
+            document.getElementById('pastBalanceDate').value = '';
+            renderAccountsSummary(allUserTransactions.map(t => ({ data: () => t })));
         };
 
         const renderIncomeExpenseChart = (transactions) => {
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            const currentMonthTransactions = transactions.filter(t => {
+            const currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
+            const txs = transactions.filter(t => {
                 const date = t.data().date.toDate();
-                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear && t.data().category !== 'No Contabilizados';
             });
-            
-            const income = currentMonthTransactions
-                .filter(t => t.data().type === 'income' && t.data().category !== 'Transferencia' && t.data().category !== 'Saldo Inicial')
-                .reduce((sum, t) => sum + t.data().amount, 0);
-            const expense = currentMonthTransactions
-                .filter(t => t.data().type === 'expense' && t.data().category !== 'Transferencia')
-                .reduce((sum, t) => sum + t.data().amount, 0);
-                
-            const data = {
-                labels: ['Ingresos', 'Gastos'],
-                datasets: [{
-                    data: [income, expense],
-                    backgroundColor: ['#4f46e5', '#ef4444']
-                }]
-            };
-            
-            const config = {
-                type: 'doughnut',
-                data: data,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { callbacks: { label: (item) => `${item.label}: ${item.raw.toFixed(2)} €` } }
-                    }
-                }
-            };
-
+            const income = txs.filter(t => t.data().type === 'income' && !['Transferencia','Saldo Inicial','Inversiones'].includes(t.data().category)).reduce((sum, t) => sum + t.data().amount, 0);
+            const expense = txs.filter(t => t.data().type === 'expense' && !['Transferencia','Inversiones'].includes(t.data().category)).reduce((sum, t) => sum + t.data().amount, 0);
             if (incomeExpenseChart) incomeExpenseChart.destroy();
-            incomeExpenseChart = new Chart(document.getElementById('incomeExpenseChart'), config);
+            incomeExpenseChart = new Chart(document.getElementById('incomeExpenseChart'), {
+                type: 'doughnut', data: { labels: ['Ingresos', 'Gastos'], datasets: [{ data: [income, expense], backgroundColor: ['#4f46e5', '#ef4444'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (i) => `${i.label}: ${i.raw.toFixed(2)} €` } } } }
+            });
         };
         
         const renderCategoryAnalysisChart = () => {
             const type = document.getElementById('categoryAnalysisType').value;
-            const startDateValue = document.getElementById('categoryAnalysisStartDate').value;
-            const endDateValue = document.getElementById('categoryAnalysisEndDate').value;
-
-            let filtered = allUserTransactions.filter(t => t.type === type && t.category !== 'Transferencia' && t.category !== 'Saldo Inicial');
-            
-            if (startDateValue) {
-                const start = new Date(startDateValue);
-                start.setHours(0,0,0,0);
-                filtered = filtered.filter(t => t.date.toDate() >= start);
-            }
-            if (endDateValue) {
-                const end = new Date(endDateValue);
-                end.setHours(23,59,59,999);
-                filtered = filtered.filter(t => t.date.toDate() <= end);
-            }
-            
-            const categories = filtered.reduce((acc, t) => {
-                acc[t.category] = (acc[t.category] || 0) + t.amount;
-                return acc;
-            }, {});
-            
-            const data = {
-                labels: Object.keys(categories),
-                datasets: [{
-                    data: Object.values(categories),
-                    backgroundColor: [
-                        '#4c51bf', '#63b3ed', '#4fd1c5', '#f6ad55', '#e53e3e',
-                        '#d53f8c', '#a0aec0', '#9f7aea', '#38b2ac', '#ed8936'
-                    ],
-                    hoverOffset: 4
-                }]
-            };
-
-            const config = {
-                type: 'doughnut',
-                data: data,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'right' },
-                        tooltip: { callbacks: { label: (item) => `${item.label}: ${item.raw.toFixed(2)} €` } }
-                    }
-                }
-            };
-
+            const startStr = document.getElementById('categoryAnalysisStartDate').value;
+            const endStr = document.getElementById('categoryAnalysisEndDate').value;
+            let filtered = allUserTransactions.filter(t => t.type === type && !['Transferencia','Saldo Inicial','No Contabilizados'].includes(t.category));
+            if (startStr) { const s = new Date(startStr); s.setHours(0,0,0,0); filtered = filtered.filter(t => t.date.toDate() >= s); }
+            if (endStr) { const e = new Date(endStr); e.setHours(23,59,59,999); filtered = filtered.filter(t => t.date.toDate() <= e); }
+            const categories = filtered.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
+            const total = Object.values(categories).reduce((sum, val) => sum + val, 0);
+            const header = document.getElementById('categoryAnalysisChart').closest('.bg-white').querySelector('h2');
+            if (header) header.innerHTML = `Análisis por Categoría <span class="text-sm font-normal text-indigo-600 ml-2">(Total: ${total.toFixed(2)} €)</span>`;
             if (categoryAnalysisChart) categoryAnalysisChart.destroy();
-            categoryAnalysisChart = new Chart(document.getElementById('categoryAnalysisChart'), config);
+            categoryAnalysisChart = new Chart(document.getElementById('categoryAnalysisChart'), {
+                type: 'doughnut', data: { labels: Object.keys(categories), datasets: [{ data: Object.values(categories), backgroundColor: ['#4c51bf', '#63b3ed', '#4fd1c5', '#f6ad55', '#e53e3e', '#d53f8c', '#a0aec0', '#9f7aea', '#38b2ac', '#ed8936'], hoverOffset: 4 }] },
+                options: { responsive: true, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (i) => `${i.label}: ${i.raw.toFixed(2)} €` } } } }
+            });
         };
 
         const renderCashFlowChart = (transactions) => {
-            const monthlyData = {};
-            const monthLabelsShort = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-            const today = new Date();
-            
-            for (let i = 5; i >= 0; i--) {
-                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                const key = `${d.getFullYear()}-${d.getMonth()}`;
-                monthlyData[key] = {
-                    income: 0,
-                    expense: 0,
-                    label: monthLabelsShort[d.getMonth()]
-                };
-            }
-            
-            const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-            sixMonthsAgo.setHours(0,0,0,0);
-
-            const recentTransactions = transactions.filter(t => t.data().date.toDate() >= sixMonthsAgo);
-
-            recentTransactions.forEach(tDoc => {
-                const t = tDoc.data();
-                const date = t.date.toDate();
-                const key = `${date.getFullYear()}-${date.getMonth()}`;
+            const monthlyData = {}, labelsShort = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"], today = new Date();
+            for (let i = 5; i >= 0; i--) { const d = new Date(today.getFullYear(), today.getMonth() - i, 1); monthlyData[`${d.getFullYear()}-${d.getMonth()}`] = { income: 0, expense: 0, label: labelsShort[d.getMonth()] }; }
+            const sixAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1); sixAgo.setHours(0,0,0,0);
+            transactions.filter(t => t.data().date.toDate() >= sixAgo).forEach(tDoc => {
+                const t = tDoc.data(); if (t.category === 'No Contabilizados') return;
+                const key = `${t.date.toDate().getFullYear()}-${t.date.toDate().getMonth()}`;
                 if (monthlyData[key]) {
-                    if (t.type === 'income' && t.category !== 'Transferencia' && t.category !== 'Saldo Inicial') {
-                        monthlyData[key].income += t.amount;
-                    } else if (t.type === 'expense' && t.category !== 'Transferencia') {
-                        monthlyData[key].expense += t.amount;
-                    }
+                    if (t.type === 'income' && !['Transferencia','Saldo Inicial','Inversiones'].includes(t.category)) monthlyData[key].income += t.amount;
+                    else if (t.type === 'expense' && !['Transferencia','Inversiones'].includes(t.category)) monthlyData[key].expense += t.amount;
                 }
             });
-            
             const sortedKeys = Object.keys(monthlyData).sort((a, b) => new Date(a.split('-')[0], a.split('-')[1]) - new Date(b.split('-')[0], b.split('-')[1]));
-            
-            const labels = sortedKeys.map(key => monthlyData[key].label);
-            const savingsData = sortedKeys.map(key => monthlyData[key].income - monthlyData[key].expense);
-            const backgroundColors = savingsData.map(saving => saving >= 0 ? 'rgba(79, 70, 229, 0.7)' : 'rgba(239, 68, 68, 0.7)');
-            
-            const data = {
-                labels: labels,
-                datasets: [{
-                    label: 'Ahorro Mensual',
-                    data: savingsData,
-                    backgroundColor: backgroundColors,
-                    borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
-                    borderWidth: 1
-                }]
-            };
-            
-            const config = {
-                type: 'bar',
-                data: data,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => `Ahorro: ${context.raw.toFixed(2)} €`
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            ticks: {
-                                callback: (value) => `${value} €`
-                            }
-                        }
-                    }
-                }
-            };
-            
+            const savings = sortedKeys.map(k => monthlyData[k].income - monthlyData[k].expense);
+            const colors = savings.map(s => s >= 0 ? 'rgba(79, 70, 229, 0.7)' : 'rgba(239, 68, 68, 0.7)');
             if (cashFlowChart) cashFlowChart.destroy();
-            cashFlowChart = new Chart(document.getElementById('cashFlowChart'), config);
+            cashFlowChart = new Chart(document.getElementById('cashFlowChart'), {
+                type: 'bar', data: { labels: sortedKeys.map(k => monthlyData[k].label), datasets: [{ label: 'Ahorro Mensual', data: savings, backgroundColor: colors, borderColor: colors.map(c => c.replace('0.7', '1')), borderWidth: 1 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `Ahorro: ${c.raw.toFixed(2)} €` } } }, scales: { y: { ticks: { callback: (v) => `${v} €` } } } }
+            });
         };
 
-        // Event listeners
+        document.getElementById('calculatePastBalanceBtn').addEventListener('click', showPastBalances);
+        document.getElementById('resetBalanceBtn').addEventListener('click', resetBalances);
         document.getElementById('updateCategoryChartBtn').addEventListener('click', renderCategoryAnalysisChart);
-        
-        document.getElementById('registerTransactionBtn').addEventListener('click', () => {
-            document.getElementById('transactionMain').classList.add('hidden');
-            document.getElementById('transactionHistory').classList.add('hidden');
-            document.getElementById('transactionMenu').classList.remove('hidden');
-        });
-        
-        // *** MODIFICADO: Llama a applyFiltersAndRender para poblar el gráfico al entrar ***
-        document.getElementById('viewHistoryBtn').addEventListener('click', () => {
-            document.getElementById('transactionMain').classList.add('hidden');
-            document.getElementById('transactionMenu').classList.add('hidden');
-            document.getElementById('transactionContent').classList.add('hidden');
-            document.getElementById('transactionHistory').classList.remove('hidden');
-            // Llama a la función para poblar la tabla Y el gráfico al cargar la vista
-            applyFiltersAndRender();
-        });
-        
-        document.getElementById('backFromTransactionBtn').addEventListener('click', () => {
-            document.getElementById('transactionMenu').classList.add('hidden');
-            document.getElementById('transactionMain').classList.remove('hidden');
-        });
-        
-        // *** SOLUCIÓN AL BUG: Llamar a hideAllTransactionForms() ***
-        document.getElementById('addIncomeBtn').addEventListener('click', () => {
-            document.getElementById('transactionMenu').classList.add('hidden');
-            document.getElementById('transactionContent').classList.remove('hidden');
-            hideAllTransactionForms(); // <-- BUG SOLUCIONADO
-            document.getElementById('incomeExpenseForm').classList.remove('hidden');
-            document.getElementById('formTitle').textContent = 'Registrar Ingreso';
-            document.getElementById('type').value = 'income';
-            resetTransactionForm();
-        });
-        
-        // *** SOLUCIÓN AL BUG: Llamar a hideAllTransactionForms() ***
-        document.getElementById('addExpenseBtn').addEventListener('click', () => {
-            document.getElementById('transactionMenu').classList.add('hidden');
-            document.getElementById('transactionContent').classList.remove('hidden');
-            hideAllTransactionForms(); // <-- BUG SOLUCIONADO
-            document.getElementById('incomeExpenseForm').classList.remove('hidden');
-            document.getElementById('formTitle').textContent = 'Registrar Gasto';
-            document.getElementById('type').value = 'expense';
-            resetTransactionForm();
-        });
-        
-        // *** MODIFICADO: Llamar a hideAllTransactionForms() por consistencia ***
-        document.getElementById('addTransferBtn').addEventListener('click', () => {
-            document.getElementById('transactionMenu').classList.add('hidden');
-            document.getElementById('transactionContent').classList.remove('hidden');
-            hideAllTransactionForms(); // <-- BUG SOLUCIONADO
-            document.getElementById('transferForm').classList.remove('hidden');
-        });
-        
-        document.getElementById('backFromFormBtn').addEventListener('click', () => {
-            document.getElementById('transactionContent').classList.add('hidden');
-            document.getElementById('transactionMenu').classList.remove('hidden');
-            resetTransactionForm();
-        });
-        
-        // *** MODIFICADO: Destruye el gráfico del historial al salir ***
-        document.getElementById('backFromHistoryBtn').addEventListener('click', () => {
-            document.getElementById('transactionHistory').classList.add('hidden');
-            document.getElementById('transactionMain').classList.remove('hidden');
-            
-            // Destruir el gráfico para liberar memoria
-            if (historyChart) {
-                historyChart.destroy();
-                historyChart = null;
-            }
-        });
-        
+        document.getElementById('registerTransactionBtn').addEventListener('click', () => { document.getElementById('transactionMain').classList.add('hidden'); document.getElementById('transactionHistory').classList.add('hidden'); document.getElementById('transactionMenu').classList.remove('hidden'); });
+        document.getElementById('viewHistoryBtn').addEventListener('click', () => { document.getElementById('transactionMain').classList.add('hidden'); document.getElementById('transactionMenu').classList.add('hidden'); document.getElementById('transactionContent').classList.add('hidden'); document.getElementById('transactionHistory').classList.remove('hidden'); applyFiltersAndRender(); });
+        document.getElementById('backFromTransactionBtn').addEventListener('click', () => { document.getElementById('transactionMenu').classList.add('hidden'); document.getElementById('transactionMain').classList.remove('hidden'); });
+        document.getElementById('addIncomeBtn').addEventListener('click', () => { document.getElementById('transactionMenu').classList.add('hidden'); document.getElementById('transactionContent').classList.remove('hidden'); hideAllTransactionForms(); document.getElementById('incomeExpenseForm').classList.remove('hidden'); document.getElementById('formTitle').textContent = 'Registrar Ingreso'; document.getElementById('type').value = 'income'; resetTransactionForm(); });
+        document.getElementById('addExpenseBtn').addEventListener('click', () => { document.getElementById('transactionMenu').classList.add('hidden'); document.getElementById('transactionContent').classList.remove('hidden'); hideAllTransactionForms(); document.getElementById('incomeExpenseForm').classList.remove('hidden'); document.getElementById('formTitle').textContent = 'Registrar Gasto'; document.getElementById('type').value = 'expense'; resetTransactionForm(); });
+        document.getElementById('addTransferBtn').addEventListener('click', () => { document.getElementById('transactionMenu').classList.add('hidden'); document.getElementById('transactionContent').classList.remove('hidden'); hideAllTransactionForms(); document.getElementById('transferForm').classList.remove('hidden'); });
+        document.getElementById('backFromFormBtn').addEventListener('click', () => { document.getElementById('transactionContent').classList.add('hidden'); document.getElementById('transactionMenu').classList.remove('hidden'); resetTransactionForm(); });
+        document.getElementById('backFromHistoryBtn').addEventListener('click', () => { document.getElementById('transactionHistory').classList.add('hidden'); document.getElementById('transactionMain').classList.remove('hidden'); if (historyChart) { historyChart.destroy(); historyChart = null; } });
         document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
         document.getElementById('transferFormElem').addEventListener('submit', saveTransfer);
 
-        document.getElementById('categoryForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newCategory = document.getElementById('newCategory').value.trim();
-            if (newCategory) {
-                addSetting('categories', newCategory);
-                document.getElementById('newCategory').value = '';
-            }
-        });
+        document.getElementById('categoryForm').addEventListener('submit', (e) => { e.preventDefault(); const v = document.getElementById('newCategory').value.trim(); if(v) { addSetting('categories', v); document.getElementById('newCategory').value = ''; } });
+        document.getElementById('accountForm').addEventListener('submit', (e) => { e.preventDefault(); const v = document.getElementById('newAccount').value.trim(); const b = document.getElementById('initialBalance').value; if(v) { addSetting('accounts', v, b); document.getElementById('newAccount').value = ''; document.getElementById('initialBalance').value = '0'; } });
+        document.getElementById('accountingForm').addEventListener('submit', (e) => { e.preventDefault(); const v = document.getElementById('newAccountingBook').value.trim(); if(v) { addSetting('accountingBooks', v); document.getElementById('newAccountingBook').value = ''; } });
 
-        document.getElementById('accountForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newAccountName = document.getElementById('newAccount').value.trim();
-            const initialBalance = document.getElementById('initialBalance').value;
-            if (newAccountName) {
-                addSetting('accounts', newAccountName, initialBalance);
-                document.getElementById('newAccount').value = '';
-                document.getElementById('initialBalance').value = '0';
-            }
-        });
-        
-        document.getElementById('accountingForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newAccountingBook = document.getElementById('newAccountingBook').value.trim();
-            if (newAccountingBook) {
-                addSetting('accountingBooks', newAccountingBook);
-                document.getElementById('newAccountingBook').value = '';
-            }
-        });
-        
         const initializeFinancesApp = () => {
             const today = new Date();
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-            document.getElementById('categoryAnalysisStartDate').value = firstDay;
-            document.getElementById('categoryAnalysisEndDate').value = lastDay;
-
-             onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    userId = user.uid;
-                    showMainApp(user);
-                    setupRealtimeListeners(userId);
-                } else {
-                    userId = null;
-                    cleanupRealtimeListeners();
-                    showAuthScreen();
-                }
+            const first = new Date(today.getFullYear(), today.getMonth(), 1);
+            const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            first.setMinutes(first.getMinutes() - first.getTimezoneOffset()); last.setMinutes(last.getMinutes() - last.getTimezoneOffset());
+            document.getElementById('categoryAnalysisStartDate').value = first.toISOString().split('T')[0];
+            document.getElementById('categoryAnalysisEndDate').value = last.toISOString().split('T')[0];
+            onAuthStateChanged(auth, (user) => {
+                if (user) { userId = user.uid; showMainApp(user); setupRealtimeListeners(userId); } 
+                else { userId = null; cleanupRealtimeListeners(); showAuthScreen(); }
             });
         };
         
-        const toggleBalancesSwitch = document.getElementById('toggleBalances');
-        if (toggleBalancesSwitch) {
-            const isPixelated = localStorage.getItem('pixelateBalances') === 'true';
-            toggleBalancesSwitch.checked = isPixelated;
-
-            toggleBalancesSwitch.addEventListener('change', () => {
-                const isChecked = toggleBalancesSwitch.checked;
-                localStorage.setItem('pixelateBalances', isChecked);
-                toggleBalancesVisibility(isChecked);
-            });
+        const toggleSwitch = document.getElementById('toggleBalances');
+        if (toggleSwitch) {
+            toggleSwitch.checked = localStorage.getItem('pixelateBalances') === 'true';
+            toggleSwitch.addEventListener('change', () => { localStorage.setItem('pixelateBalances', toggleSwitch.checked); toggleBalancesVisibility(toggleSwitch.checked); });
         }
         
         initializeFinancesApp();
-
     </script>
 </body>
 </html>
