@@ -876,8 +876,8 @@
             chatSendIcon.classList.add('hidden');
             chatLoadingIcon.classList.remove('hidden');
 
-            const txsForPrompt = last30Txs.map(t => ({
-                    Fecha: t.date.toDate().toLocaleDateString('es-ES'),
+            const minimalTx = allUserTransactions.map(t => ({
+                Fecha: t.date.toDate().toLocaleDateString('es-ES'),
                     Descripción: t.description,
 		    Tipo: t.type === 'income' ? 'Ingreso' : 'Gasto',
                     Cantidad: t.amount,
@@ -886,7 +886,7 @@
             }));
 
             const systemPrompt = `Eres el asistente financiero personal del usuario. Tienes acceso a sus transacciones. 
-            Responde a sus preguntas basándote en estos datos: ${JSON.stringify(txsForPrompt)}. 
+            Responde a sus preguntas basándote en estos datos: ${JSON.stringify(minimalTx)}. 
             Historial de charla: ${JSON.stringify(chatHistory.slice(-4))}.
             Sé conciso, amigable y da cifras exactas si se te piden. Responde usando formato Markdown (negritas, listas).
             
