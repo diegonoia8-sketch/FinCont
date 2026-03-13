@@ -28,8 +28,10 @@
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .5; }
+            0%, 100% { opacity: 1;
+            }
+            50% { opacity: .5;
+            }
         }
         .pixelate-text {
             filter: blur(5px);
@@ -44,8 +46,10 @@
             opacity: 0;
             pointer-events: none;
         }
-        .chat-message p { margin-bottom: 0.5rem; }
-        .chat-message p:last-child { margin-bottom: 0; }
+        .chat-message p { margin-bottom: 0.5rem;
+        }
+        .chat-message p:last-child { margin-bottom: 0;
+        }
         .spinner {
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
@@ -62,12 +66,13 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg);
+        } }
 
         /* ESTILOS PARA LA IMPRESIÓN/GENERACIÓN DE PDF NATIVA */
         @media print {
             body { 
-                background-color: white !important; 
+                background-color: white !important;
                 margin: 0;
                 padding: 0;
             }
@@ -463,7 +468,7 @@
                                 <input type="text" id="newAccount" required class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Nombre de la Cuenta">
                                 <input type="number" id="initialBalance" step="0.01" value="0" class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border" placeholder="Saldo Inicial">
                                 <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
-                                    Añadir
+                                     Añadir
                                 </button>
                             </form>
                             <div class="flex flex-wrap gap-2" id="accountList"></div>
@@ -479,7 +484,7 @@
                             <div class="flex flex-wrap gap-2" id="accountingList"></div>
                         </div>
                     </div>
-                </div>
+                 </div>
             </div>
 
         </main>
@@ -501,8 +506,8 @@
             </div>
             <div id="chatMessages" class="flex-grow p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3 text-sm">
                 <div class="bg-white border border-gray-200 p-3 rounded-lg self-start max-w-[85%] shadow-sm">
-                    Hola 👋, soy tu asistente financiero. Puedo analizar tus transacciones y responder dudas sobre tus gastos, ingresos y ahorros. ¿En qué te ayudo?
-                </div>
+                    Hola , soy tu asistente financiero. Puedo analizar tus transacciones y responder dudas sobre tus gastos, ingresos y ahorros. ¿En qué te ayudo?
+</div>
             </div>
             <div class="p-3 border-t border-gray-200 bg-white rounded-b-lg">
                 <form id="chatForm" class="flex gap-2">
@@ -525,7 +530,7 @@
                 <button id="transactionsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="transactions">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6v1a1 1 0 001 1h4a1 1 0 001-1v-1a6 6 0 00-6-6zM15 9h-2v2h2m-2-2a2 2 0 00-2-2H9m-2 2h2v2h-2m-2-2a2 2 0 00-2 2H3m2 2v2h2v-2m2-2h-2v2h2m-2-2a2 2 0 00-2-2H9"/></svg>
                     <span class="text-xs mt-1">Transacciones</span>
-                </button>
+               </button>
                 <button id="settingsBtn" class="tab-button flex flex-col items-center justify-center p-2 text-gray-500 hover:text-indigo-600" data-tab="settings">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826 3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <span class="text-xs mt-1">Configuración</span>
@@ -598,7 +603,6 @@
             appId: "1:863606044392:web:9da74f5606f988b53b3b5d",
             measurementId: "G-582WDX4234"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -610,12 +614,10 @@
         const userGreeting = document.getElementById('userGreeting');
         const submitBtn = document.getElementById('submitBtn');
         const transactionIdField = document.getElementById('transactionId');
-
         let userId = null;
         let unsubscribeTransactions;
         let unsubscribeSettings;
         let allUserTransactions = [];
-        
         // Variables globales para pasar a la IA
         let userCategories = [];
         let userAccounts = [];
@@ -640,15 +642,12 @@
                 console.error("Error signing in with Google:", error);
             }
         });
-
         signOutBtn.addEventListener('click', async () => {
             await signOut(auth);
             showAuthScreen();
         });
-        
         const getTabs = () => document.querySelectorAll('.tab-content');
         const getTabButtons = () => document.querySelectorAll('.tab-button');
-        
         const showTab = (tabId) => {
             getTabs().forEach(tab => tab.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
@@ -661,7 +660,6 @@
                 showTab(e.currentTarget.dataset.tab);
             });
         });
-        
         const dbCollections = { transactions: "transactions", userSettings: "userSettings" };
         
         const hideAllTransactionForms = () => {
@@ -675,7 +673,6 @@
             transactionIdField.value = '';
             submitBtn.textContent = 'Registrar Transacción';
         };
-        
         const saveTransaction = async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -685,12 +682,11 @@
                 amount: parseFloat(form.amount.value),
                 category: form.category.value,
                 date: new Date(form.date.value),
-                account: form.account.value,
+                 account: form.account.value,
                 accountingBook: form.accountingBook.value,
                 userId: userId,
                 createdAt: serverTimestamp()
             };
-            
             try {
                 const transactionId = transactionIdField.value;
                 if (transactionId) {
@@ -730,10 +726,8 @@
                 userId: userId,
                 createdAt: serverTimestamp()
             };
-            
             const expenseData = { ...transferData, type: 'expense', account: fromAccount, category: 'Transferencia' };
             const incomeData = { ...transferData, type: 'income', account: toAccount, category: 'Transferencia' };
-            
             try {
                 await addDoc(collection(db, dbCollections.transactions), expenseData);
                 await addDoc(collection(db, dbCollections.transactions), incomeData);
@@ -762,13 +756,12 @@
                 document.getElementById('apiKeyStatus').classList.remove('hidden');
                 setTimeout(() => document.getElementById('apiKeyStatus').classList.add('hidden'), 3000);
             }
-        });
+         });
 
         // Función base para llamar a Gemini
         async function callGemini(systemPrompt, userPrompt, base64Image = null) {
             const apiKey = localStorage.getItem('geminiApiKey');
             if (!apiKey) throw new Error("Falta la API Key de Gemini. Configúrala en la pestaña de Configuración.");
-
             const parts = [{ text: `${systemPrompt}\n\nUser: ${userPrompt}` }];
             
             if (base64Image) {
@@ -784,9 +777,8 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contents: [{ parts: parts }]
-                })
+                 })
             });
-
             if(!response.ok) {
                 const err = await response.json();
                 throw new Error(err.error?.message || "Error al conectar con la IA");
@@ -802,7 +794,6 @@
         const scanReceiptText = document.getElementById('scanReceiptText');
 
         scanReceiptBtn.addEventListener('click', () => receiptInput.click());
-
         receiptInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if(!file) return;
@@ -821,7 +812,6 @@
                     let result = await callGemini("Eres un bot extractor de recibos. Responde solo con JSON.", prompt, base64Image);
                     result = result.replace(/```json/g, '').replace(/```/g, '').trim();
                     const jsonResult = JSON.parse(result);
-
                     if(jsonResult.description) document.getElementById('description').value = jsonResult.description;
                     if(jsonResult.amount) document.getElementById('amount').value = jsonResult.amount;
                     if(jsonResult.date) document.getElementById('date').value = jsonResult.date;
@@ -852,19 +842,17 @@
 
         openChatBtn.addEventListener('click', () => chatWidget.classList.remove('hidden-chat'));
         closeChatBtn.addEventListener('click', () => chatWidget.classList.add('hidden-chat'));
-
         const addMessageToChat = (text, isUser = false) => {
             const div = document.createElement('div');
             div.className = `p-3 rounded-lg text-sm max-w-[85%] shadow-sm ${isUser ? 'bg-purple-600 text-white self-end' : 'bg-white border border-gray-200 text-gray-800 self-start chat-message'}`;
             if(isUser) {
                 div.textContent = text;
             } else {
-                div.innerHTML = marked.parse(text); 
+                div.innerHTML = marked.parse(text);
             }
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         };
-
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = chatInput.value.trim();
@@ -874,22 +862,23 @@
             chatInput.value = '';
             
             chatSendIcon.classList.add('hidden');
-            chatLoadingIcon.classList.remove('hidden');
+             chatLoadingIcon.classList.remove('hidden');
 
-            const minimalTx = allUserTransactions.map(t => ({
-                Fecha: t.date.toDate().toLocaleDateString('es-ES'),
-                    Descripción: t.description,
-		    Tipo: t.type === 'income' ? 'Ingreso' : 'Gasto',
-                    Cantidad: t.amount,
-                    Categoría: t.category,
-                    Cuenta: t.account
-            }));
+            // --- AQUÍ ESTÁ EL CAMBIO SOLICITADO ---
+            const chatbotTxs = [...allUserTransactions]
+                .sort((a, b) => a.date.seconds - b.date.seconds) // Ordenado del más antiguo al más reciente
+                .map(t => ({
+                    "Descripción": t.description,
+                    "Cantidad": t.amount,
+                    "Fecha": t.date ? new Date(t.date.seconds * 1000).toISOString().split('T')[0] : 'N/A', // Formato YYYY-MM-DD
+                    "Categoria": t.category,
+                    "Tipo de Transacciones": t.type === 'income' ? 'Ingreso' : 'Gasto'
+                }));
 
             const systemPrompt = `Eres el asistente financiero personal del usuario. Tienes acceso a sus transacciones. 
-            Responde a sus preguntas basándote en estos datos: ${JSON.stringify(minimalTx)}. 
+            Responde a sus preguntas basándote en estos datos: ${JSON.stringify(chatbotTxs)}. 
             Historial de charla: ${JSON.stringify(chatHistory.slice(-4))}.
             Sé conciso, amigable y da cifras exactas si se te piden. Responde usando formato Markdown (negritas, listas).
-            
             INSTRUCCIÓN CRÍTICA PARA REGISTRAR TRANSACCIONES:
             Si el usuario te pide registrar, guardar, añadir o anotar un gasto o ingreso, DEBES extraer los datos y devolver un bloque de código JSON (usando \`\`\`json y \`\`\`) con la siguiente estructura:
             {
@@ -901,11 +890,12 @@
               "accountingBook": "(Usa 'Contabilidad A' por defecto, a menos que el usuario indique explícitamente otra de la lista [${userAccountingBooks.join(', ')}])",
               "description": "(Genera una descripción breve y representativa del gasto/ingreso)"
             }
-            Asegúrate de clasificar correctamente si es gasto o ingreso. Además del bloque JSON, puedes incluir un mensaje de confirmación amigable. Si el usuario no quiere registrar nada, responde normalmente.`;
+            Asegúrate de clasificar correctamente si es gasto o ingreso.
+            Además del bloque JSON, puedes incluir un mensaje de confirmación amigable. Si el usuario no quiere registrar nada, responde normalmente.`;
+            // --- FIN DEL CAMBIO ---
 
             try {
                 let response = await callGemini(systemPrompt, text);
-                
                 // Buscar el bloque JSON para registrar transacción
                 const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/);
                 if (jsonMatch) {
@@ -928,7 +918,7 @@
                             // Limpiar el JSON de la respuesta visible
                             response = response.replace(/```json\n?[\s\S]*?\n?```/, '').trim();
                             if (!response) {
-                                response = `✅ Listo. He registrado un ${txData.type === 'expense' ? 'gasto' : 'ingreso'} de **${txData.amount}€** en la categoría **${txData.category}** (Cuenta: ${txData.account}).`;
+                                response = ` Listo. He registrado un ${txData.type === 'expense' ? 'gasto' : 'ingreso'} de **${txData.amount}€** en la categoría **${txData.category}** (Cuenta: ${txData.account}).`;
                             }
                         }
                     } catch (parseError) {
@@ -962,7 +952,7 @@
             }
 
             try {
-                // Bloquear botón y mostrar pantalla de carga
+                 // Bloquear botón y mostrar pantalla de carga
                 generatePdfBtn.disabled = true;
                 pdfLoadingOverlay.classList.remove('hidden');
                 pdfLoadingOverlay.classList.add('flex');
@@ -981,7 +971,6 @@
                         oldestDate = t.date.toDate();
                     }
                 });
-                
                 const diffTime = Math.abs(now - oldestDate);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 const totalMonths = Math.max(1, Math.floor(diffDays / 30));
@@ -991,7 +980,6 @@
 
                 // Ordenar transacciones de más antigua a más reciente para la IA
                 last30Txs.sort((a, b) => a.date.toDate() - b.date.toDate());
-
                 // Mapear los campos estrictos requeridos para el prompt
                 const txsForPrompt = last30Txs.map(t => ({
                     Fecha: t.date.toDate().toLocaleDateString('es-ES'),
@@ -1001,7 +989,6 @@
                     Categoría: t.category,
                     Cuenta: t.account
                 }));
-
                 const inc30 = last30Txs.filter(t => t.type === 'income' && !excludeCategories.includes(t.category)).reduce((s,t) => s+t.amount, 0);
                 const exp30 = last30Txs.filter(t => t.type === 'expense' && !excludeCategories.includes(t.category)).reduce((s,t) => s+t.amount, 0);
 
@@ -1012,15 +999,12 @@
                     if (t.type !== 'expense' || excludeCategories.includes(t.category)) return;
                     averages[t.category] = (averages[t.category] || 0) + (t.amount / totalMonths);
                 });
-
                 last30Txs.forEach(t => {
                     if (t.type !== 'expense' || excludeCategories.includes(t.category)) return;
                     last30[t.category] = (last30[t.category] || 0) + t.amount;
                 });
-
                 const avgIncome = allUserTransactions.filter(t => t.type === 'income' && !excludeCategories.includes(t.category)).reduce((s,t) => s+t.amount, 0) / (totalMonths+1);
                 const avgExpense = allUserTransactions.filter(t => t.type === 'expense' && !excludeCategories.includes(t.category)).reduce((s,t) => s+t.amount, 0) / (totalMonths+1);
-
                 /* --- CÁLCULO DE COMBUSTIBLE --- */
                 const extractFuelData = (t) => {
                     const desc = t.description || "";
@@ -1042,14 +1026,14 @@
                 const calcConsumption = (txs) => {
                     const validTxs = txs.map(extractFuelData).filter(x => x !== null);
                     validTxs.sort((a, b) => a.date - b.date); // Ordenar de antiguo a nuevo
-                    if (validTxs.length < 2) return null; // Necesitamos al menos 2 registros para la diferencia
+                    if (validTxs.length < 2) return null;
+                    // Necesitamos al menos 2 registros para la diferencia
 
                     const oldest = validTxs[0];
                     const newest = validTxs[validTxs.length - 1];
                     const diffKm = newest.kms - oldest.kms;
                     
                     if (diffKm <= 0) return null;
-
                     let sumL = 0, sumEur = 0;
                     // Sumatorio excluyendo el registro más antiguo (empezamos el bucle en 1)
                     for (let i = 1; i < validTxs.length; i++) {
@@ -1068,7 +1052,6 @@
 
                 const historicalFuel = calcConsumption(allUserTransactions.filter(t => t.category === 'Combustible'));
                 const last30Fuel = calcConsumption(last30Txs.filter(t => t.category === 'Combustible'));
-
                 let fuelContext = "No hay datos suficientes con el formato correcto en las descripciones de 'Combustible' para calcular el consumo.";
                 if (historicalFuel || last30Fuel) {
                     fuelContext = "-- CÁLCULOS DE CONSUMO DE COMBUSTIBLE PRECALCULADOS --\n";
@@ -1093,18 +1076,23 @@
 
                 ${fuelContext}
 
-                Eres un analista y asesor financiero. Escribe un análisis comparando ingresos y gastos. Fíjate en las categorías donde ha gastado más en estos 30 días respecto a la media e hipotetiza a qué puede deberse observando las descripciones. Ofrece una breve recomendación final. El resultado objetivo es una tabla (todos los valores en ella deben estar centrados) con este análisis y el ahorro y debajo de ella un pequeño texto con una conclusión final. Una pequeña tabla con los 5 gastos de LISTA DE TRANSACCIONES ÚLTIMOS 30 DÍAS (ORDENADA POR FECHA) (por descripción, no por categoría) más importantes del mes (en esta tabla no tengas en cuenta los gastos con categoría "EXLABESA") de LISTA DE TRANSACCIONES ÚLTIMOS 30 DÍAS (ORDENADA POR FECHA). Una pequeña tabla con los gastos en las 3 categorías más importantes del mes. Quiero que sea un formato minimalista y elegante. No queremos que las tablas tengan bordes. 
-
-                IMPORTANTE SOBRE EL COMBUSTIBLE: Al final del análisis, añade una sección dedicada al consumo de coche. Utiliza los datos exactos que te he proporcionado arriba (en el bloque "CÁLCULOS DE CONSUMO DE COMBUSTIBLE PRECALCULADOS"). Compara brevemente el histórico con el mensual mencionando cuántos litros, euros y Kms totales se han usado para la fórmula. Organiza tu respuesta en una tabla.
+                Eres un analista y asesor financiero.
+                Escribe un análisis comparando ingresos y gastos. Fíjate en las categorías donde ha gastado más en estos 30 días respecto a la media e hipotetiza a qué puede deberse observando las descripciones.
+                Ofrece una breve recomendación final. El resultado objetivo es una tabla (todos los valores en ella deben estar centrados) con este análisis y el ahorro y debajo de ella un pequeño texto con una conclusión final.
+                Una pequeña tabla con los 5 gastos de LISTA DE TRANSACCIONES ÚLTIMOS 30 DÍAS (ORDENADA POR FECHA) (por descripción, no por categoría) más importantes del mes (en esta tabla no tengas en cuenta los gastos con categoría "EXLABESA") de LISTA DE TRANSACCIONES ÚLTIMOS 30 DÍAS (ORDENADA POR FECHA).
+                Una pequeña tabla con los gastos en las 3 categorías más importantes del mes.
+                Quiero que sea un formato minimalista y elegante. No queremos que las tablas tengan bordes.
+                IMPORTANTE SOBRE EL COMBUSTIBLE: Al final del análisis, añade una sección dedicada al consumo de coche.
+                Utiliza los datos exactos que te he proporcionado arriba (en el bloque "CÁLCULOS DE CONSUMO DE COMBUSTIBLE PRECALCULADOS").
+                Compara brevemente el histórico con el mensual mencionando cuántos litros, euros y Kms totales se han usado para la fórmula.
+                Organiza tu respuesta en una tabla.
 
 		Para el analisis financiero ten en cuenta que todos los gastos con concepto "EXLABESA" son gastos reembolsables a final de mes. No hagas mayor mención a estos gastos en la conclusión final.
-
                 Para este reporte no tengas en cuenta las siguientes categorías (ni en ingresos ni en gastos): "No Contabilizados", "Transferencia" , "Inversiones" , "Saldo Inicial".
-
-                Haz que tu respuesta se ajuste perfectamente a un formato A3 Horizontal. Utiliza colores oscuros o negros sobre fondo blanco. NO apliques fondos de color a las tablas ni a los contenedores.
-                
-                IMPORTANTE: Devuelve la respuesta utilizando formato HTML simple (h4, p, ul, li, strong, table, th, td, tr) para que sea visualmente muy atractivo y profesional. No uses la etiqueta de bloque de código de markdown (\`\`\`html). No saludes, ve directo al grano.`;
-
+                Haz que tu respuesta se ajuste perfectamente a un formato A3 Horizontal. Utiliza colores oscuros o negros sobre fondo blanco.
+                NO apliques fondos de color a las tablas ni a los contenedores.
+                IMPORTANTE: Devuelve la respuesta utilizando formato HTML simple (h4, p, ul, li, strong, table, th, td, tr) para que sea visualmente muy atractivo y profesional.
+                No uses la etiqueta de bloque de código de markdown (\`\`\`html). No saludes, ve directo al grano.`;
                 const aiResponse = await callGemini("Eres un asesor financiero experto. Devuelve la información formateada en HTML simple y profesional.", prompt);
                 const cleanHtml = aiResponse.replace(/```html/g, '').replace(/```/g, '').trim();
 
@@ -1124,14 +1112,12 @@
                     },
                     options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'bottom' } } } 
                 });
-
                 // 2. Gráfico % Gasto por Categoría
                 const totalLast30Exp = Object.values(last30).reduce((a,b) => a+b, 0);
                 const catLabels = Object.keys(last30).map(c => {
                     const pct = totalLast30Exp > 0 ? ((last30[c] / totalLast30Exp) * 100).toFixed(1) : 0;
                     return c + ' (' + pct + '%)';
                 });
-
                 pdfChart2Instance = new Chart(document.getElementById('pdfChart2'), {
                     type: 'doughnut',
                     data: {
@@ -1143,7 +1129,6 @@
                     },
                     options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'right' } } }
                 });
-
                 // 3. Gráfico Comparación Últimos 30 días VS Media Mensual Histórica
                 const categoriesList = Array.from(new Set([...Object.keys(averages), ...Object.keys(last30)]));
                 pdfChart3Instance = new Chart(document.getElementById('pdfChart3'), {
@@ -1195,13 +1180,10 @@
                                         
                                         // 2. Movemos el punto de origen de dibujo a ese centro exacto
                                         ctx.translate(bar.x, centroY);
-                                        
                                         // 3. Rotamos el lienzo -90 grados (de abajo hacia arriba)
                                         ctx.rotate(-Math.PI / 2);
-                                        
                                         // 4. Dibujamos el texto en (0,0) ya que hemos movido el origen ahí
                                         ctx.fillText(value.toFixed(0) + '€', 0, 0);
-                                        
                                         ctx.restore();
                                     }
                                 });
@@ -1209,15 +1191,10 @@
                         }
                     }]
                 });
-
                 // Pausa para que el navegador asimile el DOM antes de invocar la impresión
                 await new Promise(r => setTimeout(r, 600));
-
-
-
                 // LLAMADA NATIVA: Esto abrirá el diálogo "Guardar como PDF" del navegador.
                 window.print();
-
             } catch (err) {
                 console.error(err);
                 alert("Error al generar el informe: " + err.message);
@@ -1229,7 +1206,6 @@
                 generatePdfBtn.disabled = false;
             }
         });
-
         /* --------------- FIN SECCIÓN IA --------------- */
 
         const addSetting = async (settingType, value, initialBalance = null) => {
@@ -1258,7 +1234,7 @@
                             amount: parseFloat(initialBalance),
                             category: 'Saldo Inicial',
                             date: new Date(),
-                            account: value,
+                             account: value,
                             accountingBook: 'Principal', 
                             userId: userId,
                             createdAt: serverTimestamp()
@@ -1288,7 +1264,6 @@
                 }
             }
         };
-        
         const deleteDocument = async (collectionName, docId) => {
             if (confirm("¿Estás seguro de que quieres eliminar este registro?")) {
                 try {
@@ -1299,7 +1274,6 @@
                 }
             }
         };
-        
         const editTransaction = (docId) => {
             const transaction = allUserTransactions.find(t => t.id === docId);
             if (!transaction) return;
@@ -1353,13 +1327,12 @@
         };
         
         let historyChart;
-
         const renderHistoryChart = (transactions) => {
-            if (historyChart) { historyChart.destroy(); historyChart = null; }
+            if (historyChart) { historyChart.destroy();
+            historyChart = null; }
             const type = document.getElementById('historyChartType').value;
             const filtered = transactions.filter(t => t.type === type && !['Transferencia', 'Saldo Inicial', 'No Contabilizados'].includes(t.category));
             const ctx = document.getElementById('historyChart').getContext('2d');
-
             if (filtered.length === 0) {
                  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#9CA3AF'; ctx.font = '16px "Inter", sans-serif';
@@ -1378,7 +1351,7 @@
                         hoverOffset: 4
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (i) => `${i.label}: ${i.raw.toFixed(2)} €` } } } }
+                 options: { responsive: true, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (i) => `${i.label}: ${i.raw.toFixed(2)} €` } } } }
             };
             historyChart = new Chart(ctx, config);
         };
@@ -1391,8 +1364,10 @@
             const sortOrder = document.getElementById('filterSort').value;
 
             let filtered = [...allUserTransactions];
-            if (startDate) { const start = new Date(startDate); start.setHours(0,0,0,0); filtered = filtered.filter(t => t.date.toDate() >= start); }
-            if (endDate) { const end = new Date(endDate); end.setHours(23,59,59,999); filtered = filtered.filter(t => t.date.toDate() <= end); }
+            if (startDate) { const start = new Date(startDate); start.setHours(0,0,0,0); filtered = filtered.filter(t => t.date.toDate() >= start);
+            }
+            if (endDate) { const end = new Date(endDate);
+            end.setHours(23,59,59,999); filtered = filtered.filter(t => t.date.toDate() <= end); }
             if (category) filtered = filtered.filter(t => t.category === category);
             if (account) filtered = filtered.filter(t => t.account === account);
 
@@ -1404,7 +1379,6 @@
         document.getElementById('applyFiltersBtn').addEventListener('click', applyFiltersAndRender);
         document.getElementById('clearFiltersBtn').addEventListener('click', () => { document.getElementById('filterForm').reset(); applyFiltersAndRender(); });
         document.getElementById('historyChartType').addEventListener('change', applyFiltersAndRender);
-
         const exportToCSV = () => {
             const headers = ['Fecha', 'Tipo', 'Descripción', 'Cantidad (€)', 'Categoría', 'Cuenta', 'Contabilidad'];
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
@@ -1423,18 +1397,16 @@
         
         const populateSelectOptions = (selectId, options, includePlaceholder = true, placeholderText = 'Seleccionar...') => {
             const selectElem = document.getElementById(selectId);
-            if (!selectElem) return; 
+            if (!selectElem) return;
             selectElem.innerHTML = '';
             if (includePlaceholder) selectElem.appendChild(new Option(placeholderText, ''));
             options.forEach(opt => selectElem.appendChild(new Option(opt, opt)));
         };
-
         const renderSettings = (settings) => {
             // Guardamos las configuraciones para que la IA tenga contexto
             userCategories = settings.categories || [];
             userAccounts = settings.accounts || [];
             userAccountingBooks = settings.accountingBooks || [];
-
             const renderList = (elementId, items, type) => {
                 const list = document.getElementById(elementId);
                 list.innerHTML = '';
@@ -1450,7 +1422,6 @@
             renderList('accountingList', settings.accountingBooks, 'accountingBooks');
 
             document.querySelectorAll('.delete-setting-btn').forEach(btn => btn.addEventListener('click', (e) => deleteSetting(e.currentTarget.dataset.type, e.currentTarget.dataset.value)));
-            
             const catsForExp = settings.categories.filter(c => c !== 'Transferencia' && c !== 'Saldo Inicial');
             populateSelectOptions('category', catsForExp);
             populateSelectOptions('account', settings.accounts);
@@ -1461,14 +1432,12 @@
             populateSelectOptions('filterCategory', settings.categories, true, 'Todas las categorías');
             populateSelectOptions('filterAccount', settings.accounts, true, 'Todas las cuentas');
         };
-
         const setupRealtimeListeners = (uid) => {
             unsubscribeTransactions = onSnapshot(query(collection(db, dbCollections.transactions), where("userId", "==", uid)), (snapshot) => {
                 allUserTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderDashboard(snapshot.docs);
                 if (!document.getElementById('transactionHistory').classList.contains('hidden')) applyFiltersAndRender();
             });
-
             unsubscribeSettings = onSnapshot(doc(db, dbCollections.userSettings, uid), (doc) => {
                 if (doc.exists()) renderSettings(doc.data());
                 else setDoc(doc.ref, {
@@ -1481,7 +1450,6 @@
 
         const cleanupRealtimeListeners = () => { if (unsubscribeTransactions) unsubscribeTransactions(); if (unsubscribeSettings) unsubscribeSettings(); };
         let incomeExpenseChart, categoryAnalysisChart, cashFlowChart;
-        
         const renderDashboard = (transactions) => {
             renderAccountsSummary(transactions);
             renderIncomeExpenseChart(transactions);
@@ -1521,7 +1489,8 @@
                 data.type === 'income' ? accounts[data.account] += data.amount : accounts[data.account] -= data.amount;
             });
             let html = `<h4 class="text-md font-bold text-gray-800 mb-2">Saldos al ${targetDate.toLocaleDateString('es-ES')}</h4>`, total = 0;
-            for (const acc in accounts) { total += accounts[acc]; html += `<div class="flex justify-between items-center"><span class="text-sm font-medium text-gray-700">${acc}</span><span class="balance-value text-sm font-bold ${accounts[acc] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[acc].toFixed(2)} €</span></div>`; }
+            for (const acc in accounts) { total += accounts[acc]; html += `<div class="flex justify-between items-center"><span class="text-sm font-medium text-gray-700">${acc}</span><span class="balance-value text-sm font-bold ${accounts[acc] >= 0 ? 'text-green-600' : 'text-red-600'}">${accounts[acc].toFixed(2)} €</span></div>`;
+            }
             html += `<div class="flex items-center justify-between mt-4 border-t pt-4"><span class="text-base font-semibold text-gray-800">Saldo Total:</span><span class="balance-value text-xl font-bold text-indigo-600">${total.toFixed(2)} €</span></div>`;
             document.getElementById('accountsSummary').innerHTML = html;
             toggleBalancesVisibility(document.getElementById('toggleBalances').checked);
@@ -1537,7 +1506,6 @@
             document.getElementById('pastBalanceDate').value = '';
             renderAccountsSummary(allUserTransactions.map(t => ({ data: () => t })));
         };
-
         const renderIncomeExpenseChart = (transactions) => {
             const currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
             const txs = transactions.filter(t => {
@@ -1558,8 +1526,10 @@
             const startStr = document.getElementById('categoryAnalysisStartDate').value;
             const endStr = document.getElementById('categoryAnalysisEndDate').value;
             let filtered = allUserTransactions.filter(t => t.type === type && !['Transferencia','Saldo Inicial','No Contabilizados'].includes(t.category));
-            if (startStr) { const s = new Date(startStr); s.setHours(0,0,0,0); filtered = filtered.filter(t => t.date.toDate() >= s); }
-            if (endStr) { const e = new Date(endStr); e.setHours(23,59,59,999); filtered = filtered.filter(t => t.date.toDate() <= e); }
+            if (startStr) { const s = new Date(startStr); s.setHours(0,0,0,0); filtered = filtered.filter(t => t.date.toDate() >= s);
+            }
+            if (endStr) { const e = new Date(endStr);
+            e.setHours(23,59,59,999); filtered = filtered.filter(t => t.date.toDate() <= e); }
             const categories = filtered.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
             const total = Object.values(categories).reduce((sum, val) => sum + val, 0);
             const header = document.getElementById('categoryAnalysisChart').closest('.bg-white').querySelector('h2');
@@ -1573,8 +1543,11 @@
 
         const renderCashFlowChart = (transactions) => {
             const monthlyData = {}, labelsShort = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"], today = new Date();
-            for (let i = 5; i >= 0; i--) { const d = new Date(today.getFullYear(), today.getMonth() - i, 1); monthlyData[`${d.getFullYear()}-${d.getMonth()}`] = { income: 0, expense: 0, label: labelsShort[d.getMonth()] }; }
-            const sixAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1); sixAgo.setHours(0,0,0,0);
+            for (let i = 5; i >= 0; i--) { const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                monthlyData[`${d.getFullYear()}-${d.getMonth()}`] = { income: 0, expense: 0, label: labelsShort[d.getMonth()] };
+            }
+            const sixAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+            sixAgo.setHours(0,0,0,0);
             transactions.filter(t => t.data().date.toDate() >= sixAgo).forEach(tDoc => {
                 const t = tDoc.data(); if (t.category === 'No Contabilizados') return;
                 const key = `${t.date.toDate().getFullYear()}-${t.date.toDate().getMonth()}`;
@@ -1589,7 +1562,8 @@
             if (cashFlowChart) cashFlowChart.destroy();
             cashFlowChart = new Chart(document.getElementById('cashFlowChart'), {
                 type: 'bar', data: { labels: sortedKeys.map(k => monthlyData[k].label), datasets: [{ label: 'Ahorro Mensual', data: savings, backgroundColor: colors, borderColor: colors.map(c => c.replace('0.7', '1')), borderWidth: 1 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `Ahorro: ${c.raw.toFixed(2)} €` } } }, scales: { y: { ticks: { callback: (v) => `${v} €` } } } }
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `Ahorro: ${c.raw.toFixed(2)} €` } } }, scales: { y: { ticks: { callback: (v) => `${v} €` } 
+                } } }
             });
         };
 
@@ -1606,16 +1580,15 @@
         document.getElementById('backFromHistoryBtn').addEventListener('click', () => { document.getElementById('transactionHistory').classList.add('hidden'); document.getElementById('transactionMain').classList.remove('hidden'); if (historyChart) { historyChart.destroy(); historyChart = null; } });
         document.getElementById('transactionForm').addEventListener('submit', saveTransaction);
         document.getElementById('transferFormElem').addEventListener('submit', saveTransfer);
-
         document.getElementById('categoryForm').addEventListener('submit', (e) => { e.preventDefault(); const v = document.getElementById('newCategory').value.trim(); if(v) { addSetting('categories', v); document.getElementById('newCategory').value = ''; } });
         document.getElementById('accountForm').addEventListener('submit', (e) => { e.preventDefault(); const v = document.getElementById('newAccount').value.trim(); const b = document.getElementById('initialBalance').value; if(v) { addSetting('accounts', v, b); document.getElementById('newAccount').value = ''; document.getElementById('initialBalance').value = '0'; } });
         document.getElementById('accountingForm').addEventListener('submit', (e) => { e.preventDefault(); const v = document.getElementById('newAccountingBook').value.trim(); if(v) { addSetting('accountingBooks', v); document.getElementById('newAccountingBook').value = ''; } });
-
         const initializeFinancesApp = () => {
             const today = new Date();
             const first = new Date(today.getFullYear(), today.getMonth(), 1);
             const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            first.setMinutes(first.getMinutes() - first.getTimezoneOffset()); last.setMinutes(last.getMinutes() - last.getTimezoneOffset());
+            first.setMinutes(first.getMinutes() - first.getTimezoneOffset());
+            last.setMinutes(last.getMinutes() - last.getTimezoneOffset());
             document.getElementById('categoryAnalysisStartDate').value = first.toISOString().split('T')[0];
             document.getElementById('categoryAnalysisEndDate').value = last.toISOString().split('T')[0];
             onAuthStateChanged(auth, (user) => {
@@ -1631,6 +1604,6 @@
         }
         
         initializeFinancesApp();
-    </script>
+</script>
 </body>
 </html>
